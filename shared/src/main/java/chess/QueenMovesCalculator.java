@@ -1,4 +1,4 @@
-package chess;
-
-public class QueenMovesCalculator {
-}
+//package chess;
+//
+//public class QueenMovesCalculator implements PieceMovesCalculator{
+//}

@@ -55,10 +55,16 @@ public class ChessPiece {
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         ChessPiece piece = board.getPiece(myPosition);
-        if (piece.getPieceType() == PieceType.BISHOP) {
-            return List.of(new ChessMove(new ChessPosition(5,4), new ChessPosition(1,8), null));
-        }
-        return List.of();
+        PieceMovesCalculator moveCalc = switch (piece.getPieceType()) {
+            case KING -> new KingMovesCalculator();
+//            case QUEEN -> new QueenMovesCalculator();
+//            case KNIGHT -> new KnightMovesCalculator();
+//            case PAWN -> new PawnMovesCalculator();
+//            case ROOK -> new RookMovesCalculator();
+//            case BISHOP -> new BishopMovesCalculator();
+            default -> throw new RuntimeException("Piece Type Not Known" + piece.getPieceType());
+        };
+        return moveCalc.pieceMoves(board, myPosition);
     }
 
     @Override

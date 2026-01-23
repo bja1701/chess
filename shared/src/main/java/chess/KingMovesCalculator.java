@@ -12,10 +12,7 @@ public class KingMovesCalculator implements PieceMovesCalculator{
         int col = myPosition.getColumn();
 
         // only numbers possible for adding to row and column are -1 to 1 for king.
-        int[][] kingMoves = {
-                {1, 0}, {1, 1}, {0, 1}, {-1, 1},
-                {-1, 0}, {-1, -1}, {0, -1}, {1, -1}
-        };
+        int[][] kingMoves = { {1,0}, {1, 1}, {0,1}, {-1,1}, {-1, 0}, {-1,-1}, {0,-1}, {1,-1}};
         // loop through moves
         for (int[] move : kingMoves) {
             int nextRow = row + move[0];

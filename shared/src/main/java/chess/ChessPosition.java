@@ -34,6 +34,10 @@ public class ChessPosition {
         return col;
     }
 
+    public boolean isOnBoard() {
+        return row <= 8 && col <= 8 && row >= 1 && col >= 1;
+    }
+
     @Override
     public String toString() {
         return String.format("[%d,%d]", row, col);

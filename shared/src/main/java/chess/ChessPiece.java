@@ -1,7 +1,6 @@
 package chess;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -57,12 +56,11 @@ public class ChessPiece {
         ChessPiece piece = board.getPiece(myPosition);
         PieceMovesCalculator moveCalc = switch (piece.getPieceType()) {
             case KING -> new KingMovesCalculator();
-//            case QUEEN -> new QueenMovesCalculator();
-//            case KNIGHT -> new KnightMovesCalculator();
-//            case PAWN -> new PawnMovesCalculator();
-//            case ROOK -> new RookMovesCalculator();
-//            case BISHOP -> new BishopMovesCalculator();
-            default -> throw new RuntimeException("Piece Type Not Known" + piece.getPieceType());
+            case QUEEN -> new QueenMovesCalculator();
+            case KNIGHT -> new KnightMovesCalculator();
+            case PAWN -> new PawnMovesCalculator();
+            case ROOK -> new RookMovesCalculator();
+            case BISHOP -> new BishopMovesCalculator();
         };
         return moveCalc.pieceMoves(board, myPosition);
     }

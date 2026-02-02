@@ -10,15 +10,21 @@ import java.util.Collection;
  */
 public class ChessGame {
 
-    public ChessGame() {
+    private final TeamColor team;
+    private final ChessPosition startPosition;
+    private final TeamColor turn;
 
+    public ChessGame(TeamColor team, TeamColor turn, ChessPosition startPosition) {
+        this.team = team;
+        this.startPosition = startPosition;
+        this.turn = turn;
     }
 
     /**
      * @return Which team's turn it is
      */
     public TeamColor getTeamTurn() {
-        throw new RuntimeException("Not implemented");
+        return turn;
     }
 
     /**
@@ -27,7 +33,9 @@ public class ChessGame {
      * @param team the team whose turn it is
      */
     public void setTeamTurn(TeamColor team) {
-        throw new RuntimeException("Not implemented");
+        if (team == TeamColor.WHITE){
+            // starts the game
+        }
     }
 
     /**
@@ -66,7 +74,8 @@ public class ChessGame {
      * @return True if the specified team is in check
      */
     public boolean isInCheck(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        ChessGame.findKing()
+
     }
 
     /**
@@ -106,5 +115,20 @@ public class ChessGame {
      */
     public ChessBoard getBoard() {
         throw new RuntimeException("Not implemented");
+    }
+
+    public ChessPosition findKing(ChessGame.TeamColor teamColor){
+        for (int row = 1; row <=8 ; row++){
+            for (int col = 1; col<=8 ; col++){
+                ChessPosition space = new ChessPosition(row, col);
+                ChessBoard board = new ChessBoard();
+                ChessPiece piece = board.getPiece(space);
+                if (piece != null && piece.getTeamColor() == teamColor && piece.getPieceType() == ChessPiece.PieceType.KING){
+                    return space;
+                }
+
+            }
+        }
+        return null;
     }
 }

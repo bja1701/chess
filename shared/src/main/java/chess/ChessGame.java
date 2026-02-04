@@ -1,5 +1,6 @@
 package chess;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -10,14 +11,12 @@ import java.util.Collection;
  */
 public class ChessGame {
 
-    private final TeamColor team;
-    private final ChessPosition startPosition;
-    private final TeamColor turn;
+    private TeamColor turn;
+    private final ChessBoard board;
 
-    public ChessGame(TeamColor team, TeamColor turn, ChessPosition startPosition) {
-        this.team = team;
-        this.startPosition = startPosition;
+    public ChessGame( TeamColor turn, ChessBoard board) {
         this.turn = turn;
+        this.board = board;
     }
 
     /**
@@ -33,9 +32,7 @@ public class ChessGame {
      * @param team the team whose turn it is
      */
     public void setTeamTurn(TeamColor team) {
-        if (team == TeamColor.WHITE){
-            // starts the game
-        }
+        turn = team;
     }
 
     /**
@@ -54,12 +51,26 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        ChessPiece piece = new ChessBoard().getPiece(startPosition);
+        ChessPiece piece = board.getPiece(startPosition);
+        Collection<ChessMove> potentialMoves = piece.pieceMoves(board, startPosition);
+        Collection<ChessMove> goodMoves = new ArrayList<>();
+        for (ChessMove move : potentialMoves){
+//            current state
+            ChessPiece capturedPiece = board.getPiece(move.getEndPosition());
+            ChessPiece oppPiece = board.getPiece(move.getStartPosition());
+            // move piece to test
+            board.addPiece(move.getEndPosition(), oppPiece);
+            board.addPiece(move.getStartPosition(), null);
+            // check if king is safe
+            if (!isInCheck(piece.getTeamColor())){
+                goodMoves.add(move);
+            }
+            // put piece back?
+            board.addPiece(move.getStartPosition(), oppPiece);
+            board.addPiece(move.getEndPosition(), capturedPiece);
 
-        if (piece == null){
-            return null;
         }
-        //use piece type enum in ChessPiece, and loop through them and check at start position which one it is. then use moves calculator to return valid moves.
+        return goodMoves;
     }
 
     /**
@@ -84,7 +95,6 @@ public class ChessGame {
         // check moves to see if king is in check... not sure how to best do that
         // check all opponent pieces to see if they have moves that hit the kingLocation
         // iterate through every opponent piece.
-        ChessBoard board = new ChessBoard();
         for (int row = 1; row <=8; row++){
             for (int col = 1; col <=8; col ++){
                 ChessPosition pos = new ChessPosition(row, col);
@@ -113,7 +123,31 @@ public class ChessGame {
      * @return True if the specified team is in checkmate
      */
     public boolean isInCheckmate(TeamColor teamColor) {
-        ChessPosition kingLocation = findKing(teamColor);
+//        ChessPosition kingLocation = findKing(teamColor);
+        if (!isInCheck(teamColor)){
+            return false;
+        }
+
+        // we have valid moves, we have is in check
+        // can any pieces make a valid move
+        // if there are valid moves then that means that move will escape check and be good
+
+        for (int row = 1; row <=8; row++){
+            for (int col = 1; col <=8; col ++){
+                ChessPosition pos = new ChessPosition(row, col);
+                ChessPiece piece = board.getPiece(pos);
+                ChessGame.TeamColor pieceColor = board.getPiece(pos).getTeamColor();
+                if (piece != null) {
+                    if (pieceColor == teamColor) {
+                        Collection<ChessMove> moves = validMoves(pos);
+                        if (!moves.isEmpty()) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     /**
@@ -149,7 +183,6 @@ public class ChessGame {
         for (int row = 1; row <=8 ; row++){
             for (int col = 1; col<=8 ; col++){
                 ChessPosition space = new ChessPosition(row, col);
-                ChessBoard board = new ChessBoard();
                 ChessPiece piece = board.getPiece(space);
                 if (piece != null && piece.getTeamColor() == teamColor && piece.getPieceType() == ChessPiece.PieceType.KING){
                     return space;

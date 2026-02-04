@@ -80,8 +80,26 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        throw new RuntimeException("Not implemented");
-        // how do i move the actual chess piece object?
+        ChessPosition beginning = move.getStartPosition();
+        ChessPiece piece = board.getPiece(beginning);
+        Collection<ChessMove> safeMoves = validMoves(beginning);
+
+        if (piece == null || piece.getTeamColor() != getTeamTurn() || !safeMoves.contains(move)){
+            throw new InvalidMoveException("Can't move there");
+        } else {
+            board.addPiece(beginning, null);
+
+        }
+        // What do I need to check? promotion move, or just a regular move
+        if (move.getPromotionPiece() != null){
+            ChessPiece promoPiece = new ChessPiece(piece.getTeamColor(), piece.getPieceType());
+            board.addPiece(move.getEndPosition(), promoPiece);
+        } else {
+            board.addPiece(move.getEndPosition(), piece);
+        }
+
+        setTeamTurn(piece.getTeamColor());
+
     }
 
     /**

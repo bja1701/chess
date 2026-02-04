@@ -54,7 +54,12 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        throw new RuntimeException("Not implemented");
+        ChessPiece piece = new ChessBoard().getPiece(startPosition);
+
+        if (piece == null){
+            return null;
+        }
+        //use piece type enum in ChessPiece, and loop through them and check at start position which one it is. then use moves calculator to return valid moves.
     }
 
     /**
@@ -65,6 +70,7 @@ public class ChessGame {
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
         throw new RuntimeException("Not implemented");
+        // how do i move the actual chess piece object?
     }
 
     /**
@@ -74,8 +80,30 @@ public class ChessGame {
      * @return True if the specified team is in check
      */
     public boolean isInCheck(TeamColor teamColor) {
-        ChessGame.findKing()
-
+        ChessPosition kingLocation = findKing(teamColor);
+        // check moves to see if king is in check... not sure how to best do that
+        // check all opponent pieces to see if they have moves that hit the kingLocation
+        // iterate through every opponent piece.
+        ChessBoard board = new ChessBoard();
+        for (int row = 1; row <=8; row++){
+            for (int col = 1; col <=8; col ++){
+                ChessPosition pos = new ChessPosition(row, col);
+                ChessPiece piece = board.getPiece(pos);
+                ChessPiece.PieceType pieceType = board.getPiece(pos).getPieceType();
+                ChessGame.TeamColor pieceColor = board.getPiece(pos).getTeamColor();
+                if (piece != null){
+                    if (pieceColor != teamColor){
+                        Collection<ChessMove> enemyMoves = piece.pieceMoves(board, pos);
+                        for (ChessMove move : enemyMoves){
+                            if (move.getEndPosition().equals(kingLocation)){
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -85,7 +113,7 @@ public class ChessGame {
      * @return True if the specified team is in checkmate
      */
     public boolean isInCheckmate(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        ChessPosition kingLocation = findKing(teamColor);
     }
 
     /**

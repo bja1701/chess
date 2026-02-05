@@ -14,6 +14,7 @@ public class ChessGame {
 
     private TeamColor turn;
     private ChessBoard board;
+    private ChessMove previousMove;
 
     public ChessGame() {
         this.turn = TeamColor.WHITE;
@@ -55,6 +56,27 @@ public class ChessGame {
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
         ChessPiece piece = board.getPiece(startPosition);
         Collection<ChessMove> potentialMoves = piece.pieceMoves(board, startPosition);
+        // en passant check
+        if (piece.getPieceType() == ChessPiece.PieceType.PAWN && previousMove != null){
+            // Check pawn moving 2 squares
+            ChessPosition oppPawnStart = previousMove.getStartPosition();
+            ChessPosition oppPawnEnd = previousMove.getEndPosition();
+            ChessPiece oppPawn = board.getPiece(oppPawnEnd);
+            int twoSpaceCheck = Math.abs (oppPawnStart.getRow() - oppPawnEnd.getRow());
+            if (oppPawn.getPieceType() == ChessPiece.PieceType.PAWN && twoSpaceCheck == 2){
+                // Check if oppPawn next to my piece (col +/- 1)
+                int nextTo = Math.abs( oppPawnEnd.getColumn() - startPosition.getColumn());
+                if(oppPawnEnd.getRow() == startPosition.getRow() && nextTo == 1){
+                    // find where my piece will move based on team color
+                    int direction = (piece.getTeamColor() == TeamColor.WHITE) ? 1 : -1;
+                    int captureRow = startPosition.getRow() + direction;
+                    int captureCol = oppPawnEnd.getColumn();
+                    ChessPosition capturePos = new ChessPosition(captureRow,captureCol);
+                    potentialMoves.add(new ChessMove(startPosition,capturePos,null));
+
+                }
+            }
+        }
         Collection<ChessMove> goodMoves = new ArrayList<>();
         for (ChessMove move : potentialMoves){
 //            current state
@@ -82,6 +104,7 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
+        // need to modify for en passant
         ChessPosition beginning = move.getStartPosition();
         ChessPiece piece = board.getPiece(beginning);
 
@@ -236,6 +259,8 @@ public class ChessGame {
         }
         return null;
     }
+
+
 
     @Override
     public boolean equals(Object o) {

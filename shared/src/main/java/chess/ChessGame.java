@@ -57,7 +57,7 @@ public class ChessGame {
         ChessPiece piece = board.getPiece(startPosition);
         Collection<ChessMove> potentialMoves = piece.pieceMoves(board, startPosition);
         // en passant check
-        if (piece.getPieceType() == ChessPiece.PieceType.PAWN && previousMove != null){
+        if (previousMove != null && piece.getPieceType() == ChessPiece.PieceType.PAWN){
             // Check pawn moving 2 squares
             ChessPosition oppPawnStart = previousMove.getStartPosition();
             ChessPosition oppPawnEnd = previousMove.getEndPosition();
@@ -116,10 +116,23 @@ public class ChessGame {
 
         if (piece.getTeamColor() != getTeamTurn() || !safeMoves.contains(move)){
             throw new InvalidMoveException("Can't move there");
-        } else {
-            board.addPiece(beginning, null);
-
         }
+
+        // En Passant move
+        boolean diagonalMove = move.getStartPosition().getColumn() != move.getEndPosition().getColumn();
+        boolean isPawn = piece.getPieceType() == ChessPiece.PieceType.PAWN;
+        boolean emptySpace = board.getPiece(move.getEndPosition()) == null;
+        if ( isPawn && diagonalMove && emptySpace) {
+            int direction = (piece.getTeamColor() == TeamColor.WHITE) ? 1 : -1;
+            int captureRow = move.getEndPosition().getRow() - direction;
+            int captureCol = move.getEndPosition().getColumn();
+            ChessPosition enemyPos = new ChessPosition(captureRow, captureCol);
+
+            board.addPiece(enemyPos, null);
+        }
+
+        board.addPiece(beginning, null);
+
         // What do I need to check? promotion move, or just a regular move
         if (move.getPromotionPiece() != null){
             ChessPiece promoPiece = new ChessPiece(piece.getTeamColor(), move.getPromotionPiece());
@@ -127,18 +140,7 @@ public class ChessGame {
         } else {
             board.addPiece(move.getEndPosition(), piece);
         }
-        // En Passant move
-        boolean diagonalMove = move.getStartPosition().getColumn() != move.getEndPosition().getColumn();
-        boolean emptySpace = board.getPiece(move.getEndPosition()) == null;
-        boolean isPawn = piece.getPieceType() == ChessPiece.PieceType.PAWN;
-        if ( isPawn && diagonalMove && emptySpace) {
-            int direction = (piece.getTeamColor() == TeamColor.WHITE) ? 1 : -1;
-            int captureRow = move.getEndPosition().getRow() + direction;
-            int captureCol = move.getEndPosition().getColumn();
-            ChessPosition enemyPos = new ChessPosition(captureRow, captureCol);
 
-            board.addPiece(enemyPos, null);
-        }
         previousMove = move;
 
         if (getTeamTurn() == TeamColor.WHITE) {

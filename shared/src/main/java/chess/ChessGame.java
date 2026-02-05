@@ -127,6 +127,19 @@ public class ChessGame {
         } else {
             board.addPiece(move.getEndPosition(), piece);
         }
+        // En Passant move
+        boolean diagonalMove = move.getStartPosition().getColumn() != move.getEndPosition().getColumn();
+        boolean emptySpace = board.getPiece(move.getEndPosition()) == null;
+        boolean isPawn = piece.getPieceType() == ChessPiece.PieceType.PAWN;
+        if ( isPawn && diagonalMove && emptySpace) {
+            int direction = (piece.getTeamColor() == TeamColor.WHITE) ? 1 : -1;
+            int captureRow = move.getEndPosition().getRow() + direction;
+            int captureCol = move.getEndPosition().getColumn();
+            ChessPosition enemyPos = new ChessPosition(captureRow, captureCol);
+
+            board.addPiece(enemyPos, null);
+        }
+        previousMove = move;
 
         if (getTeamTurn() == TeamColor.WHITE) {
             setTeamTurn(TeamColor.BLACK);

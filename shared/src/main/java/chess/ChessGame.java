@@ -55,24 +55,31 @@ public class ChessGame {
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
         ChessPiece piece = board.getPiece(startPosition);
-        Collection<ChessMove> potentialMoves = piece.pieceMoves(board, startPosition);
+        Collection<ChessMove> potentialMoves
+                = piece.pieceMoves(board, startPosition);
         // en passant check
-        if (previousMove != null && piece.getPieceType() == ChessPiece.PieceType.PAWN){
+        if (previousMove != null
+                && piece.getPieceType() == ChessPiece.PieceType.PAWN){
             // Check pawn moving 2 squares
             ChessPosition oppPawnStart = previousMove.getStartPosition();
             ChessPosition oppPawnEnd = previousMove.getEndPosition();
             ChessPiece oppPawn = board.getPiece(oppPawnEnd);
-            int twoSpaceCheck = Math.abs (oppPawnStart.getRow() - oppPawnEnd.getRow());
-            if (oppPawn.getPieceType() == ChessPiece.PieceType.PAWN && twoSpaceCheck == 2){
+            int twoSpaceCheck = Math.abs (oppPawnStart.getRow()
+                    - oppPawnEnd.getRow());
+            if (oppPawn.getPieceType() == ChessPiece.PieceType.PAWN
+                    && twoSpaceCheck == 2){
                 // Check if oppPawn next to my piece (col +/- 1)
-                int nextTo = Math.abs( oppPawnEnd.getColumn() - startPosition.getColumn());
-                if(oppPawnEnd.getRow() == startPosition.getRow() && nextTo == 1){
+                int nextTo = Math.abs(oppPawnEnd.getColumn()
+                        - startPosition.getColumn());
+                if(oppPawnEnd.getRow() == startPosition.getRow()
+                        && nextTo == 1){
                     // find where my piece will move based on team color
                     int direction = (piece.getTeamColor() == TeamColor.WHITE) ? 1 : -1;
                     int captureRow = startPosition.getRow() + direction;
                     int captureCol = oppPawnEnd.getColumn();
                     ChessPosition capturePos = new ChessPosition(captureRow,captureCol);
-                    potentialMoves.add(new ChessMove(startPosition,capturePos,null));
+                    potentialMoves.add(new ChessMove(startPosition,
+                            capturePos,null));
 
                 }
             }
@@ -119,7 +126,8 @@ public class ChessGame {
         }
 
         // En Passant move
-        boolean diagonalMove = move.getStartPosition().getColumn() != move.getEndPosition().getColumn();
+        boolean diagonalMove = move.getStartPosition().getColumn()
+                != move.getEndPosition().getColumn();
         boolean isPawn = piece.getPieceType() == ChessPiece.PieceType.PAWN;
         boolean emptySpace = board.getPiece(move.getEndPosition()) == null;
         if ( isPawn && diagonalMove && emptySpace) {
@@ -135,7 +143,8 @@ public class ChessGame {
 
         // What do I need to check? promotion move, or just a regular move
         if (move.getPromotionPiece() != null){
-            ChessPiece promoPiece = new ChessPiece(piece.getTeamColor(), move.getPromotionPiece());
+            ChessPiece promoPiece = new ChessPiece(piece.getTeamColor(),
+                    move.getPromotionPiece());
             board.addPiece(move.getEndPosition(), promoPiece);
         } else {
             board.addPiece(move.getEndPosition(), piece);
@@ -266,7 +275,8 @@ public class ChessGame {
             for (int col = 1; col<=8 ; col++){
                 ChessPosition space = new ChessPosition(row, col);
                 ChessPiece piece = board.getPiece(space);
-                if (piece != null && piece.getTeamColor() == teamColor && piece.getPieceType() == ChessPiece.PieceType.KING){
+                if (piece != null && piece.getTeamColor() == teamColor
+                        && piece.getPieceType() == ChessPiece.PieceType.KING){
                     return space;
                 }
 
@@ -283,7 +293,8 @@ public class ChessGame {
             return false;
         }
         ChessGame chessGame = (ChessGame) o;
-        return turn == chessGame.turn && Objects.equals(board, chessGame.board);
+        return turn == chessGame.turn
+                && Objects.equals(board, chessGame.board);
     }
 
     @Override

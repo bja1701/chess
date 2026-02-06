@@ -35,7 +35,10 @@ public class ChessPosition {
     }
 
     public boolean isOnBoard() {
-        return row <= 8 && col <= 8 && row >= 1 && col >= 1;
+        return row <= 8
+                && col <= 8
+                && row >= 1
+                && col >= 1;
     }
 
     @Override

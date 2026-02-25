@@ -27,46 +27,49 @@ public class MemoryDataAccess implements DataAccess{
 
     @Override
     public GameData getGame(int id) throws DataAccessException {
-        return null;
+        return games.get(id);
     }
 
     @Override
     public Collection<GameData> listGames() throws DataAccessException {
-        return List.of();
+        return games.values();
     }
 
     @Override
-    public void updateGame(GameData data) throws DataAccessException {
-
+    public void updateGame(GameData gameData) throws DataAccessException {
+        games.put(gameData.gameID(), gameData);
     }
 
     @Override
-    public void createAuthToken(AuthData data) throws DataAccessException {
-
+    public void createAuthToken(AuthData authData) throws DataAccessException {
+        authTokens.put(authData.authToken(), authData);
     }
 
     @Override
-    public AuthData getAuthToken(String token) throws DataAccessException {
-        return null;
+    public AuthData getAuthToken(String authToken) throws DataAccessException {
+        return authTokens.get(authToken);
     }
 
     @Override
     public void deleteAuth(String authToken) throws DataAccessException {
-
+        authTokens.remove(authToken);
     }
 
     @Override
     public void clear() throws DataAccessException {
-
+        users.clear();
+        games.clear();
+        authTokens.clear();
+        nextID= 1;
     }
 
     @Override
     public UserData getUser(String username) throws DataAccessException {
-        return null;
+        return users.get(username);
     }
 
     @Override
-    public void createUser(UserData data) throws DataAccessException {
-        users.put(data.username(), data);
+    public void createUser(UserData userData) throws DataAccessException {
+        users.put(userData.username(), userData);
     }
 }

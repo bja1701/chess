@@ -37,6 +37,9 @@ public class MemoryDataAccess implements DataAccess{
 
     @Override
     public void updateGame(GameData gameData) throws DataAccessException {
+        if (games.get(gameData.gameID()) == null){
+            throw new DataAccessException("Game Not Found");
+        }
         games.put(gameData.gameID(), gameData);
     }
 

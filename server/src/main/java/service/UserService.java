@@ -2,9 +2,7 @@ package service;
 
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
-import model.RegisterRequest;
-import model.RegisterResult;
-import model.UserData;
+import model.*;
 
 public class UserService {
 
@@ -23,10 +21,10 @@ public class UserService {
         boolean email = registerRequest.email() == null
                 || registerRequest.email().isEmpty();
         if (username || password || email){
-            throw new DataAccessException("Error: Bad Request");
+            throw new DataAccessException("Error: bad request");
         }
         if(dataAccess.getUser(registerRequest.username()) != null){
-            throw new DataAccessException("Error: Username Already Taken");
+            throw new DataAccessException("Error: already taken");
         }
         UserData user = new UserData(registerRequest.username(), registerRequest.password(), registerRequest.email());
         dataAccess.createUser(user);
@@ -36,6 +34,36 @@ public class UserService {
 
         return new RegisterResult(registerRequest.username(), authToken);
     }
-//    public LoginResult login(LoginRequest loginRequest) {}
-//    public void logout(LogoutRequest logoutRequest) {}
+    public LoginResult login(LoginRequest loginRequest)
+            throws DataAccessException {
+        boolean username = loginRequest.username() == null
+                || loginRequest.username().isEmpty();
+        boolean password = loginRequest.password() == null
+                || loginRequest.password().isEmpty();
+        if (username || password){
+            throw new DataAccessException("Error: bad request");
+        }
+        UserData user = dataAccess.getUser(loginRequest.username());
+        if(user == null){
+            throw new DataAccessException("Error: unauthorized");
+        }
+        if (!user.password().equals(loginRequest.password())) {
+            throw new DataAccessException("Error: unauthorized");
+        }
+        String authToken = java.util.UUID.randomUUID().toString();
+        model.AuthData authData = new model.AuthData(authToken, loginRequest.username());
+        dataAccess.createAuthToken(authData);
+
+        return new LoginResult(loginRequest.username(), authToken);
+    }
+
+
+    public void logout(LogoutRequest logoutRequest)
+            throws DataAccessException {
+        AuthData token = dataAccess.getAuthToken(logoutRequest.authToken());
+        if (token == null){
+            throw new DataAccessException("Error: unauthorized");
+        }
+        dataAccess.deleteAuth(logoutRequest.authToken());
+    }
 }

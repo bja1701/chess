@@ -71,7 +71,7 @@ public class UserServiceTests {
     }
 
     @Test
-    public void logoutBad() throws DataAccessException {
+    public void logoutBad() {
         LogoutRequest request = new LogoutRequest("bad_auth_token");
 
         Assertions.assertThrows(DataAccessException.class, () -> userService.logout(request));

@@ -32,9 +32,7 @@ public class UserServiceTests {
         RegisterRequest request = new RegisterRequest("brighton", "pass", "email@test.com");
         userService.register(request);
 
-        Assertions.assertThrows(DataAccessException.class, () -> {
-            userService.register(request);
-        });
+        Assertions.assertThrows(DataAccessException.class, () -> userService.register(request));
     }
 
     @Test
@@ -56,9 +54,7 @@ public class UserServiceTests {
 
         LoginRequest request = new LoginRequest("brighton", "wrong_pass");
 
-        Assertions.assertThrows(DataAccessException.class, () -> {
-            userService.login(request);
-        });
+        Assertions.assertThrows(DataAccessException.class, () -> userService.login(request));
     }
 
     @Test
@@ -76,13 +72,8 @@ public class UserServiceTests {
 
     @Test
     public void logoutBad() throws DataAccessException {
-        RegisterRequest regReq = new RegisterRequest("brighton", "pass", "email@test.com");
-        RegisterResult result = userService.register(regReq);
-
         LogoutRequest request = new LogoutRequest("bad_auth_token");
 
-        Assertions.assertThrows(DataAccessException.class, () -> {
-            userService.logout(request);
-        });
+        Assertions.assertThrows(DataAccessException.class, () -> userService.logout(request));
     }
 }

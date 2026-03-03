@@ -8,6 +8,7 @@ import model.*;
 import service.ClearService;
 import service.GameService;
 import service.UserService;
+import io.javalin.http.Context;
 
 public class Server {
 
@@ -34,14 +35,7 @@ public class Server {
                 ctx.status(200);
                 ctx.result(gson.toJson(result));
             } catch (DataAccessException error) {
-                if (error.getMessage().equals("Error: bad request")) {
-                    ctx.status(400);
-                } else if (error.getMessage().equals("Error: already taken")) {
-                    ctx.status(403);
-                } else {
-                    ctx.status(500);
-                }
-                ctx.result("{ \"message\": \"" + error.getMessage() + "\" }");
+                handleError(error, ctx);
             }
         });
 
@@ -54,14 +48,7 @@ public class Server {
                 ctx.status(200);
                 ctx.result(gson.toJson(result));
             }  catch (DataAccessException error) {
-                if (error.getMessage().equals("Error: bad request")) {
-                    ctx.status(400);
-                } else if (error.getMessage().equals("Error: unauthorized")) {
-                    ctx.status(401);
-                } else {
-                    ctx.status(500);
-                }
-                ctx.result("{ \"message\": \"" + error.getMessage() + "\" }");
+                handleError(error, ctx);
             }
         });
 
@@ -73,14 +60,7 @@ public class Server {
                 ctx.status(200);
                 ctx.result("{}");
             } catch (DataAccessException error) {
-                if (error.getMessage().equals("Error: bad request")) {
-                    ctx.status(400);
-                } else if (error.getMessage().equals("Error: unauthorized")) {
-                    ctx.status(401);
-                } else {
-                    ctx.status(500);
-                }
-                ctx.result("{ \"message\": \"" + error.getMessage() + "\" }");
+                handleError(error, ctx);
             }
         });
 
@@ -93,14 +73,7 @@ public class Server {
                 ctx.status(200);
                 ctx.result(gson.toJson(result));
             } catch (DataAccessException error) {
-                if (error.getMessage().equals("Error: bad request")) {
-                    ctx.status(400);
-                } else if (error.getMessage().equals("Error: unauthorized")) {
-                    ctx.status(401);
-                } else {
-                    ctx.status(500);
-                }
-                ctx.result("{ \"message\": \"" + error.getMessage() + "\" }");
+                handleError(error, ctx);
             }
         });
 
@@ -114,15 +87,8 @@ public class Server {
                 CreateGameResult result = gameService.createGame(finalRequest);
                 ctx.status(200);
                 ctx.result(gson.toJson(result));
-            }  catch (DataAccessException error) {
-                if (error.getMessage().equals("Error: bad request")) {
-                    ctx.status(400);
-                } else if (error.getMessage().equals("Error: unauthorized")) {
-                    ctx.status(401);
-                } else {
-                    ctx.status(500);
-                }
-                ctx.result("{ \"message\": \"" + error.getMessage() + "\" }");
+            } catch (DataAccessException error) {
+                handleError(error, ctx);
             }
         });
 
@@ -136,16 +102,7 @@ public class Server {
                 ctx.status(200);
                 ctx.result("{}");
             } catch (DataAccessException error) {
-                if (error.getMessage().equals("Error: bad request")) {
-                    ctx.status(400);
-                } else if (error.getMessage().equals("Error: unauthorized")) {
-                    ctx.status(401);
-                } else if (error.getMessage().equals("Error: already taken")) {
-                    ctx.status(403);
-                } else {
-                    ctx.status(500);
-                }
-                ctx.result("{ \"message\": \"" + error.getMessage() + "\" }");
+                handleError(error, ctx);
             }
         });
 
@@ -163,5 +120,15 @@ public class Server {
 
     public void stop() {
         javalin.stop();
+    }
+
+    private void handleError(DataAccessException error, Context ctx) {
+        switch (error.getMessage()) {
+            case "Error: bad request" -> ctx.status(400);
+            case "Error: unauthorized" -> ctx.status(401);
+            case "Error: already taken" -> ctx.status(403);
+            default -> ctx.status(500);
+        }
+        ctx.result("{ \"message\": \"" + error.getMessage() + "\" }");
     }
 }

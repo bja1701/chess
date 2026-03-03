@@ -58,31 +58,8 @@ public class ChessGame {
         Collection<ChessMove> potentialMoves
                 = piece.pieceMoves(board, startPosition);
         // en passant check
-        if (previousMove != null
-                && piece.getPieceType() == ChessPiece.PieceType.PAWN){
-            // Check pawn moving 2 squares
-            ChessPosition oppPawnStart = previousMove.getStartPosition();
-            ChessPosition oppPawnEnd = previousMove.getEndPosition();
-            ChessPiece oppPawn = board.getPiece(oppPawnEnd);
-            int twoSpaceCheck = Math.abs (oppPawnStart.getRow()
-                    - oppPawnEnd.getRow());
-            if (oppPawn.getPieceType() == ChessPiece.PieceType.PAWN
-                    && twoSpaceCheck == 2){
-                // Check if oppPawn next to my piece (col +/- 1)
-                int nextTo = Math.abs(oppPawnEnd.getColumn()
-                        - startPosition.getColumn());
-                if(oppPawnEnd.getRow() == startPosition.getRow()
-                        && nextTo == 1){
-                    // find where my piece will move based on team color
-                    int direction = (piece.getTeamColor() == TeamColor.WHITE) ? 1 : -1;
-                    int captureRow = startPosition.getRow() + direction;
-                    int captureCol = oppPawnEnd.getColumn();
-                    ChessPosition capturePos = new ChessPosition(captureRow,captureCol);
-                    potentialMoves.add(new ChessMove(startPosition,
-                            capturePos,null));
-
-                }
-            }
+        if (previousMove != null && piece.getPieceType() == ChessPiece.PieceType.PAWN) {
+            checkEnPassant(startPosition, piece, potentialMoves);
         }
         Collection<ChessMove> goodMoves = new ArrayList<>();
         for (ChessMove move : potentialMoves){
@@ -177,12 +154,9 @@ public class ChessGame {
                 ChessPiece piece = board.getPiece(pos);
                 if (piece != null){
                     ChessGame.TeamColor pieceColor = board.getPiece(pos).getTeamColor();
-                    if (pieceColor != teamColor){
-                        Collection<ChessMove> enemyMoves = piece.pieceMoves(board, pos);
-                        for (ChessMove move : enemyMoves){
-                            if (move.getEndPosition().equals(kingLocation)){
-                                return true;
-                            }
+                    if (pieceColor != teamColor) {
+                        if (canPieceHitKing(pos, piece, kingLocation)) {
+                            return true;
                         }
                     }
                 }
@@ -199,30 +173,7 @@ public class ChessGame {
      */
     public boolean isInCheckmate(TeamColor teamColor) {
 //        ChessPosition kingLocation = findKing(teamColor);
-        if (!isInCheck(teamColor)){
-            return false;
-        }
-
-        // we have valid moves, we have is in check
-        // can any pieces make a valid move
-        // if there are valid moves then that means that move will escape check and be good
-
-        for (int row = 1; row <=8; row++){
-            for (int col = 1; col <=8; col ++){
-                ChessPosition pos = new ChessPosition(row, col);
-                ChessPiece piece = board.getPiece(pos);
-                if (piece != null) {
-                    ChessGame.TeamColor pieceColor = board.getPiece(pos).getTeamColor();
-                    if (pieceColor == teamColor) {
-                        Collection<ChessMove> moves = validMoves(pos);
-                        if (!moves.isEmpty()) {
-                            return false;
-                        }
-                    }
-                }
-            }
-        }
-        return true;
+        return isInCheck(teamColor) && hasValidMoves(teamColor);
     }
 
     /**
@@ -234,22 +185,7 @@ public class ChessGame {
      */
     public boolean isInStalemate(TeamColor teamColor) {
         // stalemate occurs when not in check but no valid moves...
-
-        if (isInCheck(teamColor)) {
-            return false;
-        }
-        for (int row = 1; row <=8; row++) {
-            for (int col = 1; col <= 8; col++) {
-                ChessPosition pos = new ChessPosition(row, col);
-                ChessPiece piece = board.getPiece(pos);
-                if (piece != null && piece.getTeamColor() == teamColor){
-                    if (!validMoves(pos).isEmpty()){
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
+        return !isInCheck(teamColor) && hasValidMoves(teamColor);
     }
 
     /**
@@ -285,6 +221,50 @@ public class ChessGame {
         return null;
     }
 
+
+    private void checkEnPassant(ChessPosition startPos, ChessPiece piece, Collection<ChessMove> moves) {
+        ChessPosition oppPawnStart = previousMove.getStartPosition();
+        ChessPosition oppPawnEnd = previousMove.getEndPosition();
+        ChessPiece oppPawn = board.getPiece(oppPawnEnd);
+
+        if (oppPawn == null || oppPawn.getPieceType() != ChessPiece.PieceType.PAWN) return;
+
+        int twoSpaceCheck = Math.abs(oppPawnStart.getRow() - oppPawnEnd.getRow());
+        if (twoSpaceCheck != 2) return;
+
+        int nextTo = Math.abs(oppPawnEnd.getColumn() - startPos.getColumn());
+        if (oppPawnEnd.getRow() == startPos.getRow() && nextTo == 1) {
+            int direction = (piece.getTeamColor() == TeamColor.WHITE) ? 1 : -1;
+            ChessPosition capturePos = new ChessPosition(startPos.getRow() + direction, oppPawnEnd.getColumn());
+            moves.add(new ChessMove(startPos, capturePos, null));
+        }
+    }
+
+    private boolean canPieceHitKing(ChessPosition pos, ChessPiece piece, ChessPosition kingPos) {
+        Collection<ChessMove> enemyMoves = piece.pieceMoves(board, pos);
+        for (ChessMove move : enemyMoves) {
+            if (move.getEndPosition().equals(kingPos)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasValidMoves(TeamColor teamColor) {
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition pos = new ChessPosition(row, col);
+                ChessPiece piece = board.getPiece(pos);
+
+                if (piece != null && piece.getTeamColor() == teamColor) {
+                    if (!validMoves(pos).isEmpty()) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
 
 
     @Override

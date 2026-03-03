@@ -69,6 +69,8 @@ public class GameServiceTests {
         JoinGameRequest joinReq = new JoinGameRequest(gameReq.authToken(), "WHITE", gameRes.gameID());
 
         gameService.joinGame(joinReq);
+
+        Assertions.assertNotNull(joinReq.gameID());
     }
 
     @Test

@@ -145,20 +145,18 @@ public class ChessGame {
      */
     public boolean isInCheck(TeamColor teamColor) {
         ChessPosition kingLocation = findKing(teamColor);
-        // check moves to see if king is in check... not sure how to best do that
-        // check all opponent pieces to see if they have moves that hit the kingLocation
-        // iterate through every opponent piece.
-        for (int row = 1; row <=8; row++){
-            for (int col = 1; col <=8; col ++){
+
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
                 ChessPosition pos = new ChessPosition(row, col);
                 ChessPiece piece = board.getPiece(pos);
-                if (piece != null){
-                    ChessGame.TeamColor pieceColor = board.getPiece(pos).getTeamColor();
-                    if (pieceColor != teamColor) {
-                        if (canPieceHitKing(pos, piece, kingLocation)) {
-                            return true;
-                        }
-                    }
+
+                if (piece == null || piece.getTeamColor() == teamColor) {
+                    continue;
+                }
+
+                if (canPieceHitKing(pos, piece, kingLocation)) {
+                    return true;
                 }
             }
         }
@@ -227,10 +225,14 @@ public class ChessGame {
         ChessPosition oppPawnEnd = previousMove.getEndPosition();
         ChessPiece oppPawn = board.getPiece(oppPawnEnd);
 
-        if (oppPawn == null || oppPawn.getPieceType() != ChessPiece.PieceType.PAWN) return;
+        if (oppPawn == null || oppPawn.getPieceType() != ChessPiece.PieceType.PAWN) {
+            return;
+        }
 
         int twoSpaceCheck = Math.abs(oppPawnStart.getRow() - oppPawnEnd.getRow());
-        if (twoSpaceCheck != 2) return;
+        if (twoSpaceCheck != 2) {
+            return;
+        }
 
         int nextTo = Math.abs(oppPawnEnd.getColumn() - startPos.getColumn());
         if (oppPawnEnd.getRow() == startPos.getRow() && nextTo == 1) {

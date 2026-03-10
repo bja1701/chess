@@ -7,8 +7,9 @@ import model.GameData;
 import model.UserData;
 import org.mindrot.jbcrypt.BCrypt;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+
 
 public class MySqlDataAccess implements DataAccess {
 
@@ -159,12 +160,31 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public Collection<GameData> listGames() throws DataAccessException {
-        return List.of();
+        var result = new ArrayList<GameData>();
+        String sql = "SELECT gameID, whiteUsername, blackUsername, gameName, game FROM game";
+        try (var conn = DatabaseManager.getConnection();
+             var ps = conn.prepareStatement(sql);
+             var rs = ps.executeQuery()) {
+            while (rs.next()) {
+                int foundId = rs.getInt("gameID");
+                String foundWhite = rs.getString("whiteUsername");
+                String foundBlack = rs.getString("blackUsername");
+                String foundName = rs.getString("gameName");
+                String gameJson = rs.getString("game");
+                ChessGame foundGame = new Gson().fromJson(gameJson, ChessGame.class);
+                result.add(new GameData(foundId, foundWhite, foundBlack, foundName, foundGame));
+            }
+        } catch (Exception e) {
+            throw new DataAccessException("Error: " + e.getMessage());
+        }
+        return result;
     }
 
     @Override
     public void updateGame(GameData gameData) throws DataAccessException {
-
+        String gameJson = new Gson().toJson(gameData.game());
+        String sql = "UPDATE game SET whiteUsername = ?, blackUsername = ?, gameName = ?, game = ? WHERE gameID = ?";
+        executeUpdate(sql, gameData.whiteUsername(), gameData.blackUsername(), gameData.gameName(), gameJson, gameData.gameID());
     }
 
     @Override

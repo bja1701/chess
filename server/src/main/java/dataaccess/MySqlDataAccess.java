@@ -1,5 +1,7 @@
 package dataaccess;
 
+import chess.ChessGame;
+import com.google.gson.Gson;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
@@ -113,11 +115,45 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public int createGame(String gameName) throws DataAccessException {
+        ChessGame newGame = new ChessGame();
+        String gameJson = new Gson().toJson(newGame);
+        String sql = "INSERT INTO game (gameName, game) VALUES (?, ?)";
+        try (var conn = DatabaseManager.getConnection();
+             var ps = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, gameName);
+            ps.setString(2, gameJson);
+            ps.executeUpdate();
+            try (var rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (Exception e) {
+            throw new DataAccessException("Error: " + e.getMessage());
+        }
         return 0;
     }
 
     @Override
     public GameData getGame(int id) throws DataAccessException {
+        String sql = "SELECT gameID, whiteUsername, blackUsername, gameName, game FROM game WHERE gameID = ?";
+        try (var conn = DatabaseManager.getConnection();
+             var ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (var rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int foundId = rs.getInt("gameID");
+                    String foundWhite = rs.getString("whiteUsername");
+                    String foundBlack = rs.getString("blackUsername");
+                    String foundName = rs.getString("gameName");
+                    String gameJson = rs.getString("game");
+                    ChessGame foundGame = new Gson().fromJson(gameJson, ChessGame.class);
+                    return new GameData(foundId, foundWhite, foundBlack, foundName, foundGame);
+                }
+            }
+        } catch (Exception e) {
+            throw new DataAccessException("Error: " + e.getMessage());
+        }
         return null;
     }
 

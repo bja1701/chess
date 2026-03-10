@@ -133,16 +133,32 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public void createAuthToken(AuthData authData) throws DataAccessException {
-
+        String sql = "INSERT INTO auth (authToken, username) VALUES (?, ?)";
+        executeUpdate(sql, authData.authToken(), authData.username());
     }
 
     @Override
     public AuthData getAuthToken(String authToken) throws DataAccessException {
+        String sql = "SELECT authToken, username FROM auth WHERE authToken = ?";
+        try (var conn = DatabaseManager.getConnection();
+             var ps = conn.prepareStatement(sql)) {
+            ps.setString(1, authToken);
+            try (var rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String foundToken = rs.getString("authToken");
+                    String foundUser = rs.getString("username");
+                    return new AuthData(foundToken, foundUser);
+                }
+            }
+        } catch (Exception e) {
+            throw new DataAccessException("Error: " + e.getMessage());
+        }
         return null;
     }
 
     @Override
     public void deleteAuth(String authToken) throws DataAccessException {
-
+        String sql = "DELETE FROM auth WHERE authToken = ?";
+        executeUpdate(sql, authToken);
     }
 }

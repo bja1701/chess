@@ -58,4 +58,54 @@ public class MySqlDataAccessTests {
         Assertions.assertNull(found);
     }
 
+    @Test
+    public void createAuthPositive() throws DataAccessException {
+        AuthData auth = new AuthData("myToken", "myUser");
+        dataAccess.createAuthToken(auth);
+
+        AuthData found = dataAccess.getAuthToken("myToken");
+        Assertions.assertNotNull(found);
+        Assertions.assertEquals("myUser", found.username());
+    }
+
+    @Test
+    public void createAuthNegative() throws DataAccessException {
+        AuthData auth = new AuthData("duplicateToken", "myUser");
+        dataAccess.createAuthToken(auth);
+        Assertions.assertThrows(DataAccessException.class, () -> {
+            dataAccess.createAuthToken(auth);
+        });
+    }
+
+    @Test
+    public void getAuthPositive() throws DataAccessException {
+        AuthData auth = new AuthData("token123", "user123");
+        dataAccess.createAuthToken(auth);
+        AuthData found = dataAccess.getAuthToken("token123");
+        Assertions.assertNotNull(found);
+        Assertions.assertEquals("token123", found.authToken());
+    }
+
+    @Test
+    public void getAuthNegative() throws DataAccessException {
+        AuthData found = dataAccess.getAuthToken("fakeToken");
+        Assertions.assertNull(found);
+    }
+
+    @Test
+    public void deleteAuthPositive() throws DataAccessException {
+        AuthData auth = new AuthData("deleteMe", "user");
+        dataAccess.createAuthToken(auth);
+        dataAccess.deleteAuth("deleteMe");
+        AuthData found = dataAccess.getAuthToken("deleteMe");
+        Assertions.assertNull(found);
+    }
+
+    @Test
+    public void deleteAuthNegative() throws DataAccessException {
+        Assertions.assertDoesNotThrow(() -> {
+            dataAccess.deleteAuth("fakeTokenThatDoesNotExist");
+        });
+    }
+
 }

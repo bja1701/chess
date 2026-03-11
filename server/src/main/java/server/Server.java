@@ -1,8 +1,10 @@
 package server;
 
 import com.google.gson.Gson;
+import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
+import dataaccess.MySqlDataAccess;
 import io.javalin.*;
 import model.*;
 import service.ClearService;
@@ -18,7 +20,12 @@ public class Server {
     private final ClearService clearService;
 
     public Server() {
-        MemoryDataAccess dataAccess = new MemoryDataAccess();
+        DataAccess dataAccess;
+        try {
+            dataAccess = new MySqlDataAccess();
+        } catch (DataAccessException e) {
+            throw new RuntimeException("Unable to start database", e);
+        }
         this.userService = new UserService(dataAccess);
         this.gameService = new GameService(dataAccess);
         this.clearService = new ClearService(dataAccess);
@@ -107,9 +114,13 @@ public class Server {
         });
 
         javalin.delete("/db", ctx -> {
-            clearService.clear();
-            ctx.status(200);
-            ctx.result("{}");
+            try {
+                clearService.clear();
+                ctx.status(200);
+                ctx.result("{}");
+            } catch (DataAccessException error) {
+                handleError(error, ctx);
+            }
         });
     }
 
@@ -129,6 +140,10 @@ public class Server {
             case "Error: already taken" -> ctx.status(403);
             default -> ctx.status(500);
         }
-        ctx.result("{ \"message\": \"" + error.getMessage() + "\" }");
+        String message = error.getMessage();
+        if (!message.startsWith("Error:")) {
+            message = "Error: " + message;
+        }
+        ctx.result("{ \"message\": \"" + message + "\" }");
     }
 }

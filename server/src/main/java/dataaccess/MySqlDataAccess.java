@@ -59,24 +59,21 @@ public class MySqlDataAccess implements DataAccess {
         }
     }
 
-    private void executeUpdate(
-            String statement, Object... params) throws DataAccessException {
-        try (var conn = DatabaseManager.getConnection()) {
-            try (var ps = conn.prepareStatement(statement)) {
-                for (int i = 0; i < params.length; i++) {
-                    switch (params[i]) {
-                        case String p -> ps.setString(i + 1, p);
-                        case Integer p -> ps.setInt(i + 1, p);
-                        case null -> ps.setNull(i + 1, java.sql.Types.NULL);
-                        default -> {
-                        }
+    private void executeUpdate(String statement, Object... params) throws DataAccessException {
+        try (var conn = DatabaseManager.getConnection();
+             var ps = conn.prepareStatement(statement)) {
+            for (int i = 0; i < params.length; i++) {
+                switch (params[i]) {
+                    case String p -> ps.setString(i + 1, p);
+                    case Integer p -> ps.setInt(i + 1, p);
+                    case null -> ps.setNull(i + 1, java.sql.Types.NULL);
+                    default -> {
                     }
                 }
-                ps.executeUpdate();
             }
+            ps.executeUpdate();
         } catch (SQLException e) {
-            throw new DataAccessException(String.format(
-                    "unable to update database: %s, %s", statement, e.getMessage()));
+            throw new DataAccessException(String.format("unable to update database: %s, %s", statement, e.getMessage()));
         }
     }
 

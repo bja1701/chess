@@ -1,8 +1,8 @@
 package server;
 
 import com.google.gson.Gson;
-import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
+import dataaccess.DataAccess;
 import dataaccess.MySqlDataAccess;
 import io.javalin.*;
 import model.*;
@@ -29,98 +29,13 @@ public class Server {
         this.gameService = new GameService(dataAccess);
         this.clearService = new ClearService(dataAccess);
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
-
-
-        // Register your endpoints and exception handlers here.
-        javalin.post("/user", ctx -> {
-            try {
-                Gson gson = new Gson();
-                String jsonBody = ctx.body();
-                RegisterRequest request = gson.fromJson(jsonBody, RegisterRequest.class);
-                RegisterResult result = userService.register(request);
-                ctx.status(200);
-                ctx.result(gson.toJson(result));
-            } catch (DataAccessException error) {
-                handleError(error, ctx);
-            }
-        });
-
-        javalin.post("/session", ctx -> {
-            try {
-                Gson gson = new Gson();
-                String jsonBody = ctx.body();
-                LoginRequest request = gson.fromJson(jsonBody, LoginRequest.class);
-                LoginResult result = userService.login(request);
-                ctx.status(200);
-                ctx.result(gson.toJson(result));
-            }  catch (DataAccessException error) {
-                handleError(error, ctx);
-            }
-        });
-
-        javalin.delete("/session", ctx -> {
-            try {
-                String authToken = ctx.header("authorization");
-                LogoutRequest request = new LogoutRequest(authToken);
-                userService.logout(request);
-                ctx.status(200);
-                ctx.result("{}");
-            } catch (DataAccessException error) {
-                handleError(error, ctx);
-            }
-        });
-
-        javalin.get("/game", ctx -> {
-            try {
-                Gson gson = new Gson();
-                String authToken = ctx.header("authorization");
-                ListGamesRequest request = new ListGamesRequest(authToken);
-                ListGamesResult result = gameService.listGames(request);
-                ctx.status(200);
-                ctx.result(gson.toJson(result));
-            } catch (DataAccessException error) {
-                handleError(error, ctx);
-            }
-        });
-
-        javalin.post("/game", ctx -> {
-            try {
-                Gson gson = new Gson();
-                String authToken = ctx.header("authorization");
-                String jsonBody = ctx.body();
-                CreateGameRequest jsonRequest = gson.fromJson(jsonBody, CreateGameRequest.class);
-                CreateGameRequest finalRequest = new CreateGameRequest(authToken, jsonRequest.gameName());
-                CreateGameResult result = gameService.createGame(finalRequest);
-                ctx.status(200);
-                ctx.result(gson.toJson(result));
-            } catch (DataAccessException error) {
-                handleError(error, ctx);
-            }
-        });
-
-        javalin.put("/game", ctx -> {
-            try {
-                Gson gson = new Gson();
-                String authToken = ctx.header("authorization");
-                JoinGameRequest jsonRequest = gson.fromJson(ctx.body(), JoinGameRequest.class);
-                JoinGameRequest finalRequest = new JoinGameRequest(authToken, jsonRequest.playerColor(), jsonRequest.gameID());
-                gameService.joinGame(finalRequest);
-                ctx.status(200);
-                ctx.result("{}");
-            } catch (DataAccessException error) {
-                handleError(error, ctx);
-            }
-        });
-
-        javalin.delete("/db", ctx -> {
-            try {
-                clearService.clear();
-                ctx.status(200);
-                ctx.result("{}");
-            } catch (DataAccessException error) {
-                handleError(error, ctx);
-            }
-        });
+        javalin.post("/user", this::registerHandler);
+        javalin.post("/session", this::loginHandler);
+        javalin.delete("/session", this::logoutHandler);
+        javalin.get("/game", this::listGamesHandler);
+        javalin.post("/game", this::createGameHandler);
+        javalin.put("/game", this::joinGameHandler);
+        javalin.delete("/db", this::clearHandler);
     }
 
     public int run(int desiredPort) {
@@ -130,6 +45,93 @@ public class Server {
 
     public void stop() {
         javalin.stop();
+    }
+
+    private void registerHandler(Context ctx) {
+        try {
+            Gson gson = new Gson();
+            RegisterRequest request = gson.fromJson(ctx.body(), RegisterRequest.class);
+            RegisterResult result = userService.register(request);
+            ctx.status(200);
+            ctx.result(gson.toJson(result));
+        } catch (DataAccessException error) {
+            handleError(error, ctx);
+        }
+    }
+
+    private void loginHandler(Context ctx) {
+        try {
+            Gson gson = new Gson();
+            LoginRequest request = gson.fromJson(ctx.body(), LoginRequest.class);
+            LoginResult result = userService.login(request);
+            ctx.status(200);
+            ctx.result(gson.toJson(result));
+        } catch (DataAccessException error) {
+            handleError(error, ctx);
+        }
+    }
+
+    private void logoutHandler(Context ctx) {
+        try {
+            String authToken = ctx.header("authorization");
+            LogoutRequest request = new LogoutRequest(authToken);
+            userService.logout(request);
+            ctx.status(200);
+            ctx.result("{}");
+        } catch (DataAccessException error) {
+            handleError(error, ctx);
+        }
+    }
+
+    private void listGamesHandler(Context ctx) {
+        try {
+            Gson gson = new Gson();
+            String authToken = ctx.header("authorization");
+            ListGamesRequest request = new ListGamesRequest(authToken);
+            ListGamesResult result = gameService.listGames(request);
+            ctx.status(200);
+            ctx.result(gson.toJson(result));
+        } catch (DataAccessException error) {
+            handleError(error, ctx);
+        }
+    }
+
+    private void createGameHandler(Context ctx) {
+        try {
+            Gson gson = new Gson();
+            String authToken = ctx.header("authorization");
+            CreateGameRequest jsonRequest = gson.fromJson(ctx.body(), CreateGameRequest.class);
+            CreateGameRequest finalRequest = new CreateGameRequest(authToken, jsonRequest.gameName());
+            CreateGameResult result = gameService.createGame(finalRequest);
+            ctx.status(200);
+            ctx.result(gson.toJson(result));
+        } catch (DataAccessException error) {
+            handleError(error, ctx);
+        }
+    }
+
+    private void joinGameHandler(Context ctx) {
+        try {
+            Gson gson = new Gson();
+            String authToken = ctx.header("authorization");
+            JoinGameRequest jsonRequest = gson.fromJson(ctx.body(), JoinGameRequest.class);
+            JoinGameRequest finalRequest = new JoinGameRequest(authToken, jsonRequest.playerColor(), jsonRequest.gameID());
+            gameService.joinGame(finalRequest);
+            ctx.status(200);
+            ctx.result("{}");
+        } catch (DataAccessException error) {
+            handleError(error, ctx);
+        }
+    }
+
+    private void clearHandler(Context ctx) {
+        try {
+            clearService.clear();
+            ctx.status(200);
+            ctx.result("{}");
+        } catch (DataAccessException error) {
+            handleError(error, ctx);
+        }
     }
 
     private void handleError(DataAccessException error, Context ctx) {

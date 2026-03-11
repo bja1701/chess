@@ -37,9 +37,7 @@ public class MySqlDataAccessTests {
     public void createUserNegative() throws DataAccessException {
         UserData user = new UserData("duplicateUser", "pass", "email");
         dataAccess.createUser(user);
-        Assertions.assertThrows(DataAccessException.class, () -> {
-            dataAccess.createUser(user);
-        });
+        Assertions.assertThrows(DataAccessException.class, () -> dataAccess.createUser(user));
     }
 
     @Test
@@ -72,9 +70,7 @@ public class MySqlDataAccessTests {
     public void createAuthNegative() throws DataAccessException {
         AuthData auth = new AuthData("duplicateToken", "myUser");
         dataAccess.createAuthToken(auth);
-        Assertions.assertThrows(DataAccessException.class, () -> {
-            dataAccess.createAuthToken(auth);
-        });
+        Assertions.assertThrows(DataAccessException.class, () -> dataAccess.createAuthToken(auth));
     }
 
     @Test
@@ -102,10 +98,65 @@ public class MySqlDataAccessTests {
     }
 
     @Test
-    public void deleteAuthNegative() throws DataAccessException {
-        Assertions.assertDoesNotThrow(() -> {
-            dataAccess.deleteAuth("fakeTokenThatDoesNotExist");
-        });
+    public void deleteAuthNegative() {
+        Assertions.assertDoesNotThrow(() -> dataAccess.deleteAuth("fakeTokenThatDoesNotExist"));
     }
 
+    @Test
+    public void createGamePositive() throws DataAccessException {
+        int gameId = dataAccess.createGame("My Awesome Game");
+        Assertions.assertTrue(gameId > 0);
+    }
+
+    @Test
+    public void createGameNegative() {
+        Assertions.assertThrows(DataAccessException.class, () -> dataAccess.createGame(null));
+    }
+
+    @Test
+    public void getGamePositive() throws DataAccessException {
+        int gameId = dataAccess.createGame("Find This Game");
+        GameData found = dataAccess.getGame(gameId);
+        Assertions.assertNotNull(found);
+        Assertions.assertEquals("Find This Game", found.gameName());
+    }
+
+    @Test
+    public void getGameNegative() throws DataAccessException {
+        GameData found = dataAccess.getGame(9999);
+        Assertions.assertNull(found);
+    }
+
+    @Test
+    public void listGamesPositive() throws DataAccessException {
+        dataAccess.createGame("Game 1");
+        dataAccess.createGame("Game 2");
+        dataAccess.createGame("Game 3");
+        var games = dataAccess.listGames();
+        Assertions.assertEquals(3, games.size());
+    }
+
+    @Test
+    public void listGamesNegative() throws DataAccessException {
+        var games = dataAccess.listGames();
+        Assertions.assertNotNull(games);
+        Assertions.assertTrue(games.isEmpty());
+    }
+
+    @Test
+    public void updateGamePositive() throws DataAccessException {
+        int gameId = dataAccess.createGame("Update Me");
+        GameData original = dataAccess.getGame(gameId);
+        GameData updated = new GameData(gameId, "WhitePlayer", original.blackUsername(), original.gameName(), original.game());
+        dataAccess.updateGame(updated);
+        GameData fetchedAgain = dataAccess.getGame(gameId);
+        Assertions.assertEquals("WhitePlayer", fetchedAgain.whiteUsername());
+    }
+
+    @Test
+    public void updateGameNegative() throws DataAccessException {
+        int gameId = dataAccess.createGame("Valid Game");
+        GameData badUpdate = new GameData(gameId, "White", "Black", null, new chess.ChessGame());
+        Assertions.assertThrows(DataAccessException.class, () -> dataAccess.updateGame(badUpdate));
+    }
 }

@@ -6,9 +6,14 @@ import java.util.Arrays;
 public class PreloginUI {
 
     private final ServerFacade facade;
+    private String authToken = null;
 
     public PreloginUI(ServerFacade facade) {
         this.facade = facade;
+    }
+
+    public String getAuthToken() {
+        return authToken;
     }
 
     public String eval(String input) {
@@ -41,7 +46,8 @@ public class PreloginUI {
             String username = params[0];
             String password = params[1];
             String email = params[2];
-            facade.register(username, password, email);
+            var authData = facade.register(username, password, email);
+            this.authToken = authData.authToken();
             return String.format("Successfully registered and logged in as %s.", username);
         }
         throw new Exception("Expected: <USERNAME> <PASSWORD> <EMAIL>");

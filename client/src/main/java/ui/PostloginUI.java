@@ -5,10 +5,17 @@ import java.util.Arrays;
 
 public class PostloginUI {
     private final ServerFacade facade;
+    private String authToken = null;
 
     public PostloginUI(ServerFacade facade) {
         this.facade = facade;
     }
+
+    public void setAuthToken(String authToken) {
+        this.authToken = authToken;
+    }
+
+
 
     public String eval(String input) {
         try {
@@ -38,7 +45,9 @@ public class PostloginUI {
                 """;
     }
 
-    private String logout() {
+    private String logout() throws Exception {
+        facade.logout(authToken);
+        this.authToken = null;
         return "logout";
     }
 }

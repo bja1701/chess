@@ -30,6 +30,7 @@ public class Repl {
                     result = preloginUI.eval(line);
                     if (result.contains("logged in")) {
                         state = State.SIGNED_IN;
+                        postloginUI.setAuthToken(preloginUI.getAuthToken());
                     }
                 } else {
                     result = postloginUI.eval(line);

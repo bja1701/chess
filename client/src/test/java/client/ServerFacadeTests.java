@@ -120,4 +120,23 @@ public class ServerFacadeTests {
             facade.listGames("faketoken");
         });
     }
+
+    @Test
+    @DisplayName("Positive Join Game Test")
+    void joinGameSuccess() throws Exception {
+        AuthData authData = facade.register("player1", "password", "p1@email.com");
+        var gameResult = facade.createGame("My Game", authData.authToken());
+        Assertions.assertDoesNotThrow(() -> {
+            facade.joinGame("WHITE", gameResult.gameID(), authData.authToken());
+        });
+    }
+
+    @Test
+    @DisplayName("Negative Join Game Test")
+    void joinGameFailBadGameID() throws Exception {
+        AuthData authData = facade.register("player1", "password", "p1@email.com");
+        Assertions.assertThrows(Exception.class, () -> {
+            facade.joinGame("WHITE", 0, authData.authToken());
+        });
+    }
 }

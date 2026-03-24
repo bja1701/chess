@@ -1,4 +1,11 @@
 package client;
+import com.google.gson.Gson;
+import model.AuthData;
+import model.RegisterRequest;
+
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 
@@ -12,14 +19,65 @@ public class ServerFacade {
     }
 
     public void clearDatabase() throws Exception {
-        URI uri = new URI(serverUrl + "/db");
+        makeRequest("DELETE", "/db", null, null, null);
+    }
 
-        HttpURLConnection http = (HttpURLConnection) uri.toURL().openConnection();
-        http.setRequestMethod("DELETE");
-        http.connect();
-        int status = http.getResponseCode();
-        if (status != 200) {
-            throw new Exception("Failed to clear database, status code: " + status);
+    private <T> T makeRequest(String method, String path, Object request, Class<T> responseClass, String authToken) throws Exception {
+        try {
+            URI uri = new URI(serverUrl + path);
+            HttpURLConnection http = (HttpURLConnection) uri.toURL().openConnection();
+            http.setRequestMethod(method);
+            if (authToken != null) {
+                http.addRequestProperty("Authorization", authToken);
+            }
+            writeBody(request, http);
+            http.connect();
+            throwIfNotSuccessful(http);
+            return readBody(http, responseClass);
+        } catch (Exception ex) {
+            throw new Exception(ex.getMessage());
         }
+    }
+
+    private void writeBody(Object request, HttpURLConnection http) throws Exception {
+        if (request != null) {
+            http.setDoOutput(true);
+            http.addRequestProperty("Content-Type", "application/json");
+            String reqData = new Gson().toJson(request);
+
+
+            try (OutputStream reqBody = http.getOutputStream()) {
+                reqBody.write(reqData.getBytes());
+            }
+        }
+    }
+
+    public AuthData register(String username, String password, String email) throws Exception {
+        var request = new RegisterRequest(username, password, email);
+        return makeRequest("POST", "/user", request, AuthData.class, null);
+    }
+
+    private <T> T readBody(HttpURLConnection http, Class<T> responseClass) throws Exception {
+        T response = null;
+        if (http.getContentLength() < 0) {
+            try (InputStream respBody = http.getInputStream()) {
+                InputStreamReader reader = new InputStreamReader(respBody);
+                if (responseClass != null) {
+                    response = new Gson().fromJson(reader, responseClass);
+                }
+            }
+        }
+        return response;
+    }
+
+    private void throwIfNotSuccessful(HttpURLConnection http) throws Exception {
+        var status = http.getResponseCode();
+        if (!isSuccessful(status)) {
+            throw new Exception("Error: " + status);
+        }
+    }
+
+    private boolean isSuccessful(int status) {
+        return status / 100 == 2;
     }
 }

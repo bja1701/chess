@@ -1,7 +1,6 @@
 package client;
 import com.google.gson.Gson;
-import model.AuthData;
-import model.RegisterRequest;
+import model.*;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -79,5 +78,19 @@ public class ServerFacade {
 
     private boolean isSuccessful(int status) {
         return status / 100 == 2;
+    }
+
+    public AuthData login(String username, String password) throws Exception {
+        var request = new LoginRequest(username, password);
+        return makeRequest("POST", "/session", request, AuthData.class, null);
+    }
+
+    public void logout(String authToken) throws Exception {
+        makeRequest("DELETE", "/session", null, null, authToken);
+    }
+
+    public CreateGameResult createGame(String gameName, String authToken) throws Exception {
+        var request = new CreateGameRequest(null, gameName);
+        return makeRequest("POST", "/game", request, CreateGameResult.class, authToken);
     }
 }

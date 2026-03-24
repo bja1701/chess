@@ -26,6 +26,7 @@ public class PostloginUI {
                 case "create" -> createGame(params);
                 case "list" -> listGames();
                 case "join" -> joinGame(params);
+                case "observe" -> observeGame(params);
                 case "logout" -> logout();
                 case "quit" -> "quit";
                 default -> help();
@@ -91,5 +92,18 @@ public class PostloginUI {
             }
         }
         throw new Exception("Expected: <ID> [WHITE|BLACK]");
+    }
+
+    private String observeGame(String... params) throws Exception {
+        if (params.length == 1) {
+            try {
+                int gameID = Integer.parseInt(params[0]);
+                facade.joinGame(null, gameID, authToken);
+                return String.format("Successfully joined game %d as an observer.", gameID);
+            } catch (NumberFormatException e) {
+                throw new Exception("Game ID must be a number.");
+            }
+        }
+        throw new Exception("Expected: <ID>");
     }
 }

@@ -25,6 +25,7 @@ public class PostloginUI {
             return switch (cmd) {
                 case "create" -> createGame(params);
                 case "list" -> listGames();
+                case "join" -> joinGame(params);
                 case "logout" -> logout();
                 case "quit" -> "quit";
                 default -> help();
@@ -76,5 +77,19 @@ public class PostloginUI {
                     game.blackUsername() != null ? game.blackUsername() : "Empty"));
         }
         return sb.toString();
+    }
+
+    private String joinGame(String... params) throws Exception {
+        if (params.length == 2) {
+            try {
+                int gameID = Integer.parseInt(params[0]);
+                String color = params[1].toUpperCase();
+                facade.joinGame(color, gameID, authToken);
+                return String.format("Successfully joined game %d as %s.", gameID, color);
+            } catch (NumberFormatException e) {
+                throw new Exception("Game ID must be a number.");
+            }
+        }
+        throw new Exception("Expected: <ID> [WHITE|BLACK]");
     }
 }

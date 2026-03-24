@@ -24,6 +24,7 @@ public class PostloginUI {
             var params = Arrays.copyOfRange(tokens, 1, tokens.length);
             return switch (cmd) {
                 case "create" -> createGame(params);
+                case "list" -> listGames();
                 case "logout" -> logout();
                 case "quit" -> "quit";
                 default -> help();
@@ -58,5 +59,22 @@ public class PostloginUI {
         facade.logout(authToken);
         this.authToken = null;
         return "logout";
+    }
+
+    private String listGames() throws Exception {
+        var result = facade.listGames(authToken);
+        var games = result.games();
+        if (games.isEmpty()) {
+            return "No active games found. Type 'create <NAME>' to start one!";
+        }
+        StringBuilder sb = new StringBuilder("Active Games:\n");
+        for (var game : games) {
+            sb.append(String.format("  [%d] %s\n      White: %s\n      Black: %s\n",
+                    game.gameID(),
+                    game.gameName(),
+                    game.whiteUsername() != null ? game.whiteUsername() : "Empty",
+                    game.blackUsername() != null ? game.blackUsername() : "Empty"));
+        }
+        return sb.toString();
     }
 }

@@ -99,7 +99,25 @@ public class ServerFacadeTests {
     @DisplayName("Negative Logout Test")
     void logoutFailBadToken() {
         Assertions.assertThrows(Exception.class, () -> {
-            facade.logout("this_is_a_fake_token");
+            facade.logout("faketoken");
+        });
+    }
+
+    @Test
+    @DisplayName("Positive List Games Test")
+    void listGamesSuccess() throws Exception {
+        AuthData authData = facade.register("player1", "password", "p1@email.com");
+        facade.createGame("My Game", authData.authToken());
+        var result = facade.listGames(authData.authToken());
+        Assertions.assertNotNull(result);
+        Assertions.assertNotNull(result.games());
+    }
+
+    @Test
+    @DisplayName("Negative List Games Test")
+    void listGamesFailBadToken() {
+        Assertions.assertThrows(Exception.class, () -> {
+            facade.listGames("faketoken");
         });
     }
 }

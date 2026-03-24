@@ -53,7 +53,14 @@ public class PreloginUI {
         throw new Exception("Expected: <USERNAME> <PASSWORD> <EMAIL>");
     }
 
-    private String login(String... params) {
-        return "Login method hit! (We will wire this next)";
+    private String login(String... params) throws Exception {
+        if (params.length == 2) {
+            String username = params[0];
+            String password = params[1];
+            var authData = facade.login(username, password);
+            this.authToken = authData.authToken();
+            return String.format("Successfully logged in as %s.", username);
+        }
+        throw new Exception("Expected: <USERNAME> <PASSWORD>");
     }
 }

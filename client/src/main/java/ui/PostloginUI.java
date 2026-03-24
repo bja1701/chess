@@ -22,8 +22,8 @@ public class PostloginUI {
             var tokens = input.toLowerCase().split(" ");
             var cmd = (tokens.length > 0) ? tokens[0] : "help";
             var params = Arrays.copyOfRange(tokens, 1, tokens.length);
-
             return switch (cmd) {
+                case "create" -> createGame(params);
                 case "logout" -> logout();
                 case "quit" -> "quit";
                 default -> help();
@@ -31,6 +31,15 @@ public class PostloginUI {
         } catch (Exception e) {
             return e.getMessage();
         }
+    }
+
+    private String createGame(String... params) throws Exception {
+        if (params.length >= 1) {
+            String gameName = String.join(" ", params);
+            var result = facade.createGame(gameName, authToken);
+            return String.format("Successfully created game '%s' with ID: %d", gameName, result.gameID());
+        }
+        throw new Exception("Expected: <NAME>");
     }
 
     public String help() {

@@ -1,5 +1,7 @@
 package ui;
 
+import client.ServerFacade;
+
 import java.util.Scanner;
 
 public class Repl {
@@ -7,7 +9,8 @@ public class Repl {
     private final PreloginUI preloginUI;
 
     public Repl() {
-        this.preloginUI = new PreloginUI();
+        ServerFacade facade = new ServerFacade(8080);
+        this.preloginUI = new PreloginUI(facade);
     }
 
     public void run() {
@@ -19,9 +22,9 @@ public class Repl {
             String line = scanner.nextLine();
             try {
                 result = preloginUI.eval(line);
-                System.out.print(result);
+                System.out.println(result);
             } catch (Throwable e) {
-                System.out.print("Error: " + e.getMessage());
+                System.out.println("Error: " + e.getMessage());
             }
         }
         System.out.println("Goodbye!");

@@ -70,4 +70,19 @@ public class ServerFacadeTests {
         });
     }
 
+    @Test
+    @DisplayName("Create Game Positive Test")
+    void createGameSuccess() throws Exception {
+        AuthData authData = facade.register("player1", "password", "p1@email.com");
+        var result = facade.createGame("My Chess Game", authData.authToken());
+        Assertions.assertNotNull(result);
+    }
+
+    @Test
+    @DisplayName("Create Game Negative Test")
+    void createGameFailBadToken() {
+        Assertions.assertThrows(Exception.class, () -> {
+            facade.createGame("My Chess Game", "fakeToken");
+        });
+    }
 }

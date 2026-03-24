@@ -93,4 +93,13 @@ public class ServerFacade {
         var request = new CreateGameRequest(null, gameName);
         return makeRequest("POST", "/game", request, CreateGameResult.class, authToken);
     }
+
+    public ListGamesResult listGames(String authToken) throws Exception {
+        return makeRequest("GET", "/game", null, ListGamesResult.class, authToken);
+    }
+
+    public void joinGame(String playerColor, int gameID, String authToken) throws Exception {
+        var request = new JoinGameRequest(null, playerColor, gameID);
+        makeRequest("PUT", "/game", request, null, authToken);
+    }
 }

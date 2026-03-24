@@ -1,5 +1,6 @@
 package client;
 
+import model.AuthData;
 import org.junit.jupiter.api.*;
 import server.Server;
 
@@ -31,6 +32,24 @@ public class ServerFacadeTests {
     @Test
     public void sampleTest() {
         Assertions.assertTrue(true);
+    }
+
+    @Test
+    @DisplayName("Positive Register Test")
+    void registerSuccess() throws Exception {
+        AuthData authData = facade.register("player1", "password", "p1@email.com");
+        Assertions.assertNotNull(authData);
+        Assertions.assertNotNull(authData.authToken());
+        Assertions.assertEquals("player1", authData.username());
+    }
+
+    @Test
+    @DisplayName("Negative Register Test")
+    void registerFailDuplicateUser() throws Exception {
+        facade.register("player1", "password", "p1@email.com");
+        Assertions.assertThrows(Exception.class, () -> {
+            facade.register("player1", "password", "p1@email.com");
+        });
     }
 
 }

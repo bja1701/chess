@@ -52,4 +52,22 @@ public class ServerFacadeTests {
         });
     }
 
+    @Test
+    @DisplayName("Positive Login Test")
+    void loginSuccess() throws Exception {
+        facade.register("player1", "password", "p1@email.com");
+        AuthData authData = facade.login("player1", "password");
+        Assertions.assertNotNull(authData);
+        Assertions.assertNotNull(authData.authToken());
+    }
+
+    @Test
+    @DisplayName("Negative Login Test")
+    void loginFailWrongPassword() throws Exception {
+        facade.register("player1", "password", "p1@email.com");
+        Assertions.assertThrows(Exception.class, () -> {
+            facade.login("player1", "badpass");
+        });
+    }
+
 }

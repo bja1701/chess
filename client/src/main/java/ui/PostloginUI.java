@@ -101,7 +101,7 @@ public class PostloginUI {
         if (params.length == 1) {
             try {
                 int gameID = Integer.parseInt(params[0]);
-                facade.joinGame(null, gameID, authToken);
+//                facade.joinGame(null, gameID, authToken);
                 var board = new chess.ChessBoard();
                 board.resetBoard();
                 BoardDrawer drawer = new BoardDrawer();

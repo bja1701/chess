@@ -46,9 +46,6 @@ public class GameService {
             throw new DataAccessException("Error: bad request");
         }
         String teamColor = joinRequest.playerColor();
-        if (teamColor == null || teamColor.isEmpty()) {
-            return;
-        }
         if ("WHITE".equals(teamColor)){
             if (game.whiteUsername() != null){
                 throw new DataAccessException("Error: already taken");

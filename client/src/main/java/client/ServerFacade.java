@@ -72,7 +72,14 @@ public class ServerFacade {
     private void throwIfNotSuccessful(HttpURLConnection http) throws Exception {
         var status = http.getResponseCode();
         if (!isSuccessful(status)) {
-            throw new Exception("Error: " + status);
+            String errorMsg = switch (status) {
+                case 400 -> "bad request";
+                case 401 -> "unauthorized";
+                case 403 -> "already taken";
+                case 500 -> "internal server error";
+                default -> "network error (" + status + ")";
+            };
+            throw new Exception(errorMsg);
         }
     }
 

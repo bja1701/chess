@@ -6,6 +6,7 @@ import java.util.Arrays;
 public class PostloginUI {
     private final ServerFacade facade;
     private String authToken = null;
+    private model.GameData[] gamesList;
 
     public PostloginUI(ServerFacade facade) {
         this.facade = facade;
@@ -65,12 +66,15 @@ public class PostloginUI {
         var result = facade.listGames(authToken);
         var games = result.games();
         if (games.isEmpty()) {
+            this.gamesList = new model.GameData[0];
             return "No active games found. Type 'create <NAME>' to start one!";
         }
+        this.gamesList = games.toArray(new model.GameData[0]);
         StringBuilder sb = new StringBuilder("Active Games:\n");
-        for (var game : games) {
+        for (int i = 0; i < gamesList.length; i++) {
+            var game = gamesList[i];
             sb.append(String.format("  [%d] %s\n      White: %s\n      Black: %s\n",
-                    game.gameID(),
+                    i + 1,
                     game.gameName(),
                     game.whiteUsername() != null ? game.whiteUsername() : "Empty",
                     game.blackUsername() != null ? game.blackUsername() : "Empty"));
@@ -78,10 +82,15 @@ public class PostloginUI {
         return sb.toString();
     }
 
+    // add a map where number of game in list is the game id (list num to game id)
     private String joinGame(String... params) throws Exception {
         if (params.length == 2) {
             try {
-                int gameID = Integer.parseInt(params[0]);
+                int index = Integer.parseInt(params[0]);
+                if (gamesList == null || index < 1 || index > gamesList.length) {
+                    throw new Exception("Invalid game number. Type 'list' to see available games.");
+                }
+                int gameID = gamesList[index - 1].gameID();
                 String color = params[1].toUpperCase();
                 facade.joinGame(color, gameID, authToken);
                 var board = new chess.ChessBoard();
@@ -89,30 +98,32 @@ public class PostloginUI {
                 BoardDrawer drawer = new BoardDrawer();
                 boolean isWhite = color.equals("WHITE");
                 drawer.drawBoard(board, isWhite);
-                return String.format("Successfully joined game %d as %s.", gameID, color);
+                return String.format("Successfully joined game %d as %s.", index, color);
             } catch (NumberFormatException e) {
-                throw new Exception("Game ID must be a number.");
+                throw new Exception("Game number must be an integer.");
             }
         }
-        throw new Exception("Expected: <ID> [WHITE|BLACK]");
+        throw new Exception("Expected: <NUMBER> [WHITE|BLACK]");
     }
 
     private String observeGame(String... params) throws Exception {
         if (params.length == 1) {
             try {
-                int gameID = Integer.parseInt(params[0]);
-//                facade.joinGame(null, gameID, authToken);
+                int index = Integer.parseInt(params[0]);
+                if (gamesList == null || index < 1 || index > gamesList.length) {
+                    throw new Exception("Invalid game number. Type 'list' to see available games.");
+                }
                 var board = new chess.ChessBoard();
                 board.resetBoard();
                 BoardDrawer drawer = new BoardDrawer();
                 drawer.drawBoard(board, true);
                 System.out.println();
                 drawer.drawBoard(board, false);
-                return String.format("Successfully joined game %d as an observer.", gameID);
+                return String.format("Successfully joined game %d as an observer.", index);
             } catch (NumberFormatException e) {
-                throw new Exception("Game ID must be a number.");
+                throw new Exception("Game number must be an integer.");
             }
         }
-        throw new Exception("Expected: <ID>");
+        throw new Exception("Expected: <NUMBER>");
     }
 }

@@ -97,8 +97,10 @@ public class PostloginUI {
             try {
                 int gameID = Integer.parseInt(params[0]);
                 facade.joinGame(null, gameID, authToken);
+                var board = new chess.ChessBoard();
+                board.resetBoard();
                 BoardDrawer drawer = new BoardDrawer();
-                drawer.drawBoard();
+                drawer.drawBoard(board);
                 return String.format("Successfully joined game %d as an observer.", gameID);
             } catch (NumberFormatException e) {
                 throw new Exception("Game ID must be a number.");

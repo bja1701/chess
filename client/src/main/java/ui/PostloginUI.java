@@ -15,8 +15,6 @@ public class PostloginUI {
         this.authToken = authToken;
     }
 
-
-
     public String eval(String input) {
         try {
             var tokens = input.toLowerCase().split(" ");
@@ -99,6 +97,8 @@ public class PostloginUI {
             try {
                 int gameID = Integer.parseInt(params[0]);
                 facade.joinGame(null, gameID, authToken);
+                BoardDrawer drawer = new BoardDrawer();
+                drawer.drawBoard();
                 return String.format("Successfully joined game %d as an observer.", gameID);
             } catch (NumberFormatException e) {
                 throw new Exception("Game ID must be a number.");

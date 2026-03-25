@@ -84,6 +84,11 @@ public class PostloginUI {
                 int gameID = Integer.parseInt(params[0]);
                 String color = params[1].toUpperCase();
                 facade.joinGame(color, gameID, authToken);
+                var board = new chess.ChessBoard();
+                board.resetBoard();
+                BoardDrawer drawer = new BoardDrawer();
+                boolean isWhite = color.equals("WHITE");
+                drawer.drawBoard(board, isWhite);
                 return String.format("Successfully joined game %d as %s.", gameID, color);
             } catch (NumberFormatException e) {
                 throw new Exception("Game ID must be a number.");
@@ -100,7 +105,9 @@ public class PostloginUI {
                 var board = new chess.ChessBoard();
                 board.resetBoard();
                 BoardDrawer drawer = new BoardDrawer();
-                drawer.drawBoard(board);
+                drawer.drawBoard(board, true);
+                System.out.println();
+                drawer.drawBoard(board, false);
                 return String.format("Successfully joined game %d as an observer.", gameID);
             } catch (NumberFormatException e) {
                 throw new Exception("Game ID must be a number.");

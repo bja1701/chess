@@ -10,6 +10,7 @@ import service.ClearService;
 import service.GameService;
 import service.UserService;
 import io.javalin.http.Context;
+import server.websocket.WebSocketHandler;
 
 public class Server {
 
@@ -17,6 +18,7 @@ public class Server {
     private final UserService userService;
     private final GameService gameService;
     private final ClearService clearService;
+    private final WebSocketHandler webSocketHandler;
 
     public Server() {
         DataAccess dataAccess;
@@ -28,6 +30,7 @@ public class Server {
         this.userService = new UserService(dataAccess);
         this.gameService = new GameService(dataAccess);
         this.clearService = new ClearService(dataAccess);
+        this.webSocketHandler = new WebSocketHandler();
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
         javalin.post("/user", this::registerHandler);
         javalin.post("/session", this::loginHandler);
@@ -36,6 +39,12 @@ public class Server {
         javalin.post("/game", this::createGameHandler);
         javalin.put("/game", this::joinGameHandler);
         javalin.delete("/db", this::clearHandler);
+        javalin.ws("/ws", ws -> {
+            ws.onConnect(webSocketHandler::onConnect);
+            ws.onMessage(webSocketHandler::onMessage);
+            ws.onClose(webSocketHandler::onClose);
+            ws.onError(webSocketHandler::onError);
+        });
     }
 
     public int run(int desiredPort) {

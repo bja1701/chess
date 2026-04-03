@@ -1,21 +1,29 @@
 package server.websocket;
 
+import com.google.gson.Gson;
+import dataaccess.DataAccess;
+import model.AuthData;
+import model.GameData;
 import io.javalin.websocket.WsCloseContext;
 import io.javalin.websocket.WsConnectContext;
 import io.javalin.websocket.WsErrorContext;
 import io.javalin.websocket.WsMessageContext;
+import websocket.commands.UserGameCommand;
+import websocket.messages.ErrorMessage;
+import websocket.messages.LoadGameMessage;
+import websocket.messages.NotificationMessage;
 
 public class WebSocketHandler {
 
     private final ConnectionManager connections = new ConnectionManager();
+    private final DataAccess dataAccess;
+
+    public WebSocketHandler(DataAccess dataAccess) {
+        this.dataAccess = dataAccess;
+    }
 
     public void onConnect(WsConnectContext ctx) {
         System.out.println("WebSocket Connected: " + ctx.sessionId());
-    }
-
-    public void onMessage(WsMessageContext ctx) {
-        String message = ctx.message();
-        System.out.println("Received message: " + message);
     }
 
     public void onClose(WsCloseContext ctx) {
@@ -24,5 +32,57 @@ public class WebSocketHandler {
 
     public void onError(WsErrorContext ctx) {
         System.out.println("WebSocket Error: " + ctx.error());
+    }
+
+    public void onMessage(WsMessageContext ctx) {
+        String message = ctx.message();
+        try {
+            UserGameCommand command = new Gson().fromJson(message, UserGameCommand.class);
+            switch (command.getCommandType()) {
+                case CONNECT -> connect(ctx, message);
+                case MAKE_MOVE -> makeMove(ctx, message);
+                case LEAVE -> leave(ctx, message);
+                case RESIGN -> resign(ctx, message);
+            }
+        } catch (Exception e) {
+            ctx.send(new Gson().toJson(new ErrorMessage("Error: " + e.getMessage())));
+        }
+    }
+
+    private void connect(WsMessageContext ctx, String message) {
+        try {
+            UserGameCommand command = new Gson().fromJson(message, UserGameCommand.class);
+            String authToken = command.getAuthToken();
+            Integer gameID = command.getGameID();
+            AuthData auth = dataAccess.getAuthToken(authToken);
+            if (auth == null) {
+                ctx.send(new Gson().toJson(new ErrorMessage("Error: unauthorized")));
+                return;
+            }
+            GameData game = dataAccess.getGame(gameID);
+            if (game == null) {
+                ctx.send(new Gson().toJson(new ErrorMessage("Error: bad game ID")));
+                return;
+            }
+            connections.add(gameID, authToken, ctx);
+            LoadGameMessage loadMessage = new LoadGameMessage(game.game());
+            ctx.send(new Gson().toJson(loadMessage));
+            NotificationMessage notification = new NotificationMessage(auth.username() + " joined the game.");
+            connections.broadcast(gameID, authToken, notification);
+        } catch (Exception e) {
+            ctx.send(new Gson().toJson(new ErrorMessage("Error: " + e.getMessage())));
+        }
+    }
+
+    private void makeMove(WsMessageContext ctx, String message) {
+        // placeholer
+    }
+
+    private void leave(WsMessageContext ctx, String message) {
+        // placeholer
+    }
+
+    private void resign(WsMessageContext ctx, String message) {
+        // placeholer
     }
 }

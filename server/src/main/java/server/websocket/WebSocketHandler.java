@@ -7,6 +7,8 @@ import io.javalin.websocket.WsMessageContext;
 
 public class WebSocketHandler {
 
+    private final ConnectionManager connections = new ConnectionManager();
+
     public void onConnect(WsConnectContext ctx) {
         System.out.println("WebSocket Connected: " + ctx.sessionId());
     }

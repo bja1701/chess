@@ -15,6 +15,7 @@ public class ChessGame {
     private TeamColor turn;
     private ChessBoard board;
     private ChessMove previousMove;
+    private boolean gameOver = false;
 
     public ChessGame() {
         this.turn = TeamColor.WHITE;
@@ -266,6 +267,15 @@ public class ChessGame {
             }
         }
         return true;
+    }
+
+
+    public boolean isGameOver() {
+        return gameOver;
+    }
+
+    public void setGameOver(boolean status) {
+        this.gameOver = status;
     }
 
 

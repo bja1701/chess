@@ -96,6 +96,25 @@ public class WebSocketHandler {
     }
 
     private void resign(WsMessageContext ctx, String message, String authToken, Integer gameID, AuthData auth, GameData game) {
-
+        try {
+            String username = auth.username();
+            String whiteUser = game.whiteUsername();
+            String blackUser = game.blackUsername();
+            if (!username.equals(whiteUser) && !username.equals(blackUser)) {
+                ctx.send(new Gson().toJson(new ErrorMessage("Error: observers cannot resign")));
+                return;
+            }
+            if (game.game().isGameOver()) {
+                ctx.send(new Gson().toJson(new ErrorMessage("Error: game is already over")));
+                return;
+            }
+            game.game().setGameOver(true);
+            dataAccess.updateGame(new GameData(game.gameID(), whiteUser, blackUser, game.gameName(), game.game()));
+            NotificationMessage notification = new NotificationMessage(username + " has resigned.");
+            connections.broadcast(gameID, "", notification);
+        } catch (Exception e) {
+            ctx.send(new Gson().toJson(new ErrorMessage("Error: " + e.getMessage())));
+        }
     }
+
 }

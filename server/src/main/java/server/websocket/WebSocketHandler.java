@@ -38,20 +38,6 @@ public class WebSocketHandler {
         String message = ctx.message();
         try {
             UserGameCommand command = new Gson().fromJson(message, UserGameCommand.class);
-            switch (command.getCommandType()) {
-                case CONNECT -> connect(ctx, message);
-                case MAKE_MOVE -> makeMove(ctx, message);
-                case LEAVE -> leave(ctx, message);
-                case RESIGN -> resign(ctx, message);
-            }
-        } catch (Exception e) {
-            ctx.send(new Gson().toJson(new ErrorMessage("Error: " + e.getMessage())));
-        }
-    }
-
-    private void connect(WsMessageContext ctx, String message) {
-        try {
-            UserGameCommand command = new Gson().fromJson(message, UserGameCommand.class);
             String authToken = command.getAuthToken();
             Integer gameID = command.getGameID();
             AuthData auth = dataAccess.getAuthToken(authToken);
@@ -64,6 +50,19 @@ public class WebSocketHandler {
                 ctx.send(new Gson().toJson(new ErrorMessage("Error: bad game ID")));
                 return;
             }
+            switch (command.getCommandType()) {
+                case CONNECT -> connect(ctx, authToken, gameID, auth, game);
+                case MAKE_MOVE -> makeMove(ctx, message, authToken, gameID, auth, game);
+                case LEAVE -> leave(ctx, authToken, gameID, auth, game);
+                case RESIGN -> resign(ctx, message, authToken, gameID, auth, game);
+            }
+        } catch (Exception e) {
+            ctx.send(new Gson().toJson(new ErrorMessage("Error: " + e.getMessage())));
+        }
+    }
+
+    private void connect(WsMessageContext ctx, String authToken, Integer gameID, AuthData auth, GameData game) {
+        try {
             connections.add(gameID, authToken, ctx);
             LoadGameMessage loadMessage = new LoadGameMessage(game.game());
             ctx.send(new Gson().toJson(loadMessage));
@@ -74,25 +73,12 @@ public class WebSocketHandler {
         }
     }
 
-    private void makeMove(WsMessageContext ctx, String message) {
-        // placeholer
+    private void makeMove(WsMessageContext ctx, String message, String authToken, Integer gameID, AuthData auth, GameData game) {
+
     }
 
-    private void leave(WsMessageContext ctx, String message) {
+    private void leave(WsMessageContext ctx, String authToken, Integer gameID, AuthData auth, GameData game) {
         try {
-            UserGameCommand command = new Gson().fromJson(message, UserGameCommand.class);
-            String authToken = command.getAuthToken();
-            Integer gameID = command.getGameID();
-            AuthData auth = dataAccess.getAuthToken(authToken);
-            if (auth == null) {
-                ctx.send(new Gson().toJson(new ErrorMessage("Error: unauthorized")));
-                return;
-            }
-            GameData game = dataAccess.getGame(gameID);
-            if (game == null) {
-                ctx.send(new Gson().toJson(new ErrorMessage("Error: bad game ID")));
-                return;
-            }
             String username = auth.username();
             String whiteUser = game.whiteUsername();
             String blackUser = game.blackUsername();
@@ -109,7 +95,7 @@ public class WebSocketHandler {
         }
     }
 
-    private void resign(WsMessageContext ctx, String message) {
-        // placeholer
+    private void resign(WsMessageContext ctx, String message, String authToken, Integer gameID, AuthData auth, GameData game) {
+
     }
 }

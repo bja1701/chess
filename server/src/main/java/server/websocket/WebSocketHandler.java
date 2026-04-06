@@ -79,7 +79,34 @@ public class WebSocketHandler {
     }
 
     private void leave(WsMessageContext ctx, String message) {
-        // placeholer
+        try {
+            UserGameCommand command = new Gson().fromJson(message, UserGameCommand.class);
+            String authToken = command.getAuthToken();
+            Integer gameID = command.getGameID();
+            AuthData auth = dataAccess.getAuthToken(authToken);
+            if (auth == null) {
+                ctx.send(new Gson().toJson(new ErrorMessage("Error: unauthorized")));
+                return;
+            }
+            GameData game = dataAccess.getGame(gameID);
+            if (game == null) {
+                ctx.send(new Gson().toJson(new ErrorMessage("Error: bad game ID")));
+                return;
+            }
+            String username = auth.username();
+            String whiteUser = game.whiteUsername();
+            String blackUser = game.blackUsername();
+            if (username.equals(whiteUser)) {
+                dataAccess.updateGame(new GameData(game.gameID(), null, blackUser, game.gameName(), game.game()));
+            } else if (username.equals(blackUser)) {
+                dataAccess.updateGame(new GameData(game.gameID(), whiteUser, null, game.gameName(), game.game()));
+            }
+            connections.remove(gameID, authToken);
+            NotificationMessage notification = new NotificationMessage(username + " has left the game.");
+            connections.broadcast(gameID, authToken, notification);
+        } catch (Exception e) {
+            ctx.send(new Gson().toJson(new ErrorMessage("Error: " + e.getMessage())));
+        }
     }
 
     private void resign(WsMessageContext ctx, String message) {

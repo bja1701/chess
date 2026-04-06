@@ -8,6 +8,7 @@ import io.javalin.websocket.WsCloseContext;
 import io.javalin.websocket.WsConnectContext;
 import io.javalin.websocket.WsErrorContext;
 import io.javalin.websocket.WsMessageContext;
+import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
 import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
@@ -74,7 +75,60 @@ public class WebSocketHandler {
     }
 
     private void makeMove(WsMessageContext ctx, String message, String authToken, Integer gameID, AuthData auth, GameData game) {
-
+        try {
+            MakeMoveCommand command = new Gson().fromJson(message, MakeMoveCommand.class);
+            chess.ChessMove move = command.getMove();
+            String username = auth.username();
+            String whiteUser = game.whiteUsername();
+            String blackUser = game.blackUsername();
+            chess.ChessGame.TeamColor playerColor = null;
+            if (username.equals(whiteUser)) {
+                playerColor = chess.ChessGame.TeamColor.WHITE;
+            } else if (username.equals(blackUser)) {
+                playerColor = chess.ChessGame.TeamColor.BLACK;
+            }
+            if (playerColor == null) {
+                ctx.send(new Gson().toJson(new ErrorMessage("Error: observers cannot make moves")));
+                return;
+            }
+            if (game.game().isGameOver()) {
+                ctx.send(new Gson().toJson(new ErrorMessage("Error: game is already over")));
+                return;
+            }
+            if (game.game().getTeamTurn() != playerColor) {
+                ctx.send(new Gson().toJson(new ErrorMessage("Error: not your turn")));
+                return;
+            }
+            try {
+                game.game().makeMove(move);
+            } catch (chess.InvalidMoveException e) {
+                ctx.send(new Gson().toJson(new ErrorMessage("Error: invalid move")));
+                return;
+            }
+            chess.ChessGame.TeamColor opponentColor = (playerColor == chess.ChessGame.TeamColor.WHITE) ?
+                    chess.ChessGame.TeamColor.BLACK : chess.ChessGame.TeamColor.WHITE;
+            String opponentName = (opponentColor == chess.ChessGame.TeamColor.WHITE) ? whiteUser : blackUser;
+            boolean checkmate = game.game().isInCheckmate(opponentColor);
+            boolean stalemate = game.game().isInStalemate(opponentColor);
+            if (checkmate || stalemate) {
+                game.game().setGameOver(true);
+            }
+            GameData updatedGame = new GameData(game.gameID(), whiteUser, blackUser, game.gameName(), game.game());
+            dataAccess.updateGame(updatedGame);
+            LoadGameMessage loadMessage = new LoadGameMessage(game.game());
+            connections.broadcast(gameID, "", loadMessage);
+            NotificationMessage moveNotification = new NotificationMessage(username + " made a move.");
+            connections.broadcast(gameID, authToken, moveNotification);
+            if (checkmate) {
+                connections.broadcast(gameID, "", new NotificationMessage(opponentName + " is in checkmate."));
+            } else if (stalemate) {
+                connections.broadcast(gameID, "", new NotificationMessage(opponentName + " is in stalemate."));
+            } else if (game.game().isInCheck(opponentColor)) {
+                connections.broadcast(gameID, "", new NotificationMessage(opponentName + " is in check."));
+            }
+        } catch (Exception e) {
+            ctx.send(new Gson().toJson(new ErrorMessage("Error: " + e.getMessage())));
+        }
     }
 
     private void leave(WsMessageContext ctx, String authToken, Integer gameID, AuthData auth, GameData game) {

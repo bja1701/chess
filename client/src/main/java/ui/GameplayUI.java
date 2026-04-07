@@ -16,6 +16,7 @@ public class GameplayUI implements ServerMessageObserver {
     private final String authToken;
     private final int gameID;
     private final ChessGame.TeamColor playerColor;
+    private WebSocketFacade ws;
     private ChessGame game;
 
     public GameplayUI(String serverUrl, String authToken, int gameID, ChessGame.TeamColor playerColor) {
@@ -24,7 +25,7 @@ public class GameplayUI implements ServerMessageObserver {
         this.gameID = gameID;
         this.playerColor = playerColor;
         try {
-            WebSocketFacade ws = new WebSocketFacade(serverUrl, this);
+            ws = new WebSocketFacade(serverUrl, this);
             ws.connect(authToken, gameID);
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -53,8 +54,34 @@ public class GameplayUI implements ServerMessageObserver {
         return switch (cmd) {
             case "help" -> help();
             case "redraw" -> redraw();
+            case "leave" -> leave();
+            case "resign" -> resign();
             default -> "Unknown command\n";
         };
+    }
+
+    private String leave() {
+        try {
+            ws.leave(authToken, gameID);
+            return "Left the game";
+        } catch (Exception e) {
+            return e.getMessage() + "\n";
+        }
+    }
+
+    private String resign() {
+        System.out.print("Are you sure you want to resign? (yes/no): ");
+        Scanner scanner = new Scanner(System.in);
+        String confirmation = scanner.nextLine().trim().toLowerCase();
+        if (confirmation.equals("yes")) {
+            try {
+                ws.resign(authToken, gameID);
+                return "Resignation sent.\n";
+            } catch (Exception e) {
+                return e.getMessage() + "\n";
+            }
+        }
+        return "Resignation cancelled.\n";
     }
 
     private String help() {

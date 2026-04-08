@@ -120,7 +120,8 @@ public class WebSocketHandler {
             NotificationMessage moveNotification = new NotificationMessage(username + " made a move.");
             connections.broadcast(gameID, authToken, moveNotification);
             if (checkmate) {
-                connections.broadcast(gameID, "", new NotificationMessage(opponentName + " is in checkmate."));
+                //added player usernames
+                connections.broadcast(gameID, "", new NotificationMessage(opponentName + " is in checkmate. " + username + " wins!"));
             } else if (stalemate) {
                 connections.broadcast(gameID, "", new NotificationMessage(opponentName + " is in stalemate."));
             } else if (game.game().isInCheck(opponentColor)) {

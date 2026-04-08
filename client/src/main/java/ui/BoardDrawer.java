@@ -4,6 +4,8 @@ import chess.ChessBoard;
 import chess.ChessGame;
 import chess.ChessPiece;
 import chess.ChessPosition;
+import chess.ChessMove;
+import java.util.Collection;
 
 import static ui.EscapeSequences.*;
 
@@ -91,7 +93,8 @@ public class BoardDrawer {
         }
     }
 
-    public void drawHighlightBoard(ChessBoard board, boolean whitePerspective, ChessPosition selectedPosition, java.util.Collection<chess.ChessMove> validMoves) {
+    public void drawHighlightBoard(ChessBoard board, boolean whitePerspective,
+                                   ChessPosition selectedPosition, Collection<ChessMove> validMoves) {
         System.out.println();
         drawHeaders(whitePerspective);
         drawCheckerboardWithHighlights(board, whitePerspective, selectedPosition, validMoves);
@@ -101,7 +104,8 @@ public class BoardDrawer {
         System.out.println();
     }
 
-    private void drawCheckerboardWithHighlights(ChessBoard board, boolean whitePerspective, ChessPosition selectedPosition, java.util.Collection<chess.ChessMove> validMoves) {
+    private void drawCheckerboardWithHighlights(ChessBoard board, boolean whitePerspective,
+                                                ChessPosition selectedPosition, Collection<ChessMove> validMoves) {
         int startRow = whitePerspective ? 8 : 1;
         int endRow = whitePerspective ? 1 : 8;
         int rowDirection = whitePerspective ? -1 : 1;
@@ -115,16 +119,9 @@ public class BoardDrawer {
             System.out.print(" " + row + " ");
             for (int col = startCol; col != endCol + colDirection; col += colDirection) {
                 ChessPosition currentPosition = new ChessPosition(row, col);
-                boolean isHighlighted = currentPosition.equals(selectedPosition);
 
-                if (!isHighlighted && validMoves != null) {
-                    for (chess.ChessMove move : validMoves) {
-                        if (move.getEndPosition().equals(currentPosition)) {
-                            isHighlighted = true;
-                            break;
-                        }
-                    }
-                }
+                // Moved deep nesting logic to a helper method
+                boolean isHighlighted = isSquareHighlighted(currentPosition, selectedPosition, validMoves);
 
                 if (isHighlighted) {
                     if ((row + col) % 2 == 0) {
@@ -149,5 +146,19 @@ public class BoardDrawer {
             System.out.print(RESET_TEXT_COLOR);
             System.out.println();
         }
+    }
+
+    private boolean isSquareHighlighted(ChessPosition current, ChessPosition selected, Collection<ChessMove> validMoves) {
+        if (current.equals(selected)) {
+            return true;
+        }
+        if (validMoves != null) {
+            for (ChessMove move : validMoves) {
+                if (move.getEndPosition().equals(current)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

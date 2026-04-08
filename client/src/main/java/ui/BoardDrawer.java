@@ -45,8 +45,10 @@ public class BoardDrawer {
             System.out.print(" " + row + " ");
             for (int col = startCol; col != endCol + colDirection; col += colDirection) {
                 if ((row + col) % 2 == 0) {
-                    System.out.print(SET_BG_COLOR_BLUE);
+                    // Dark squares
+                    System.out.print(SET_BG_COLOR_DARK_GREY);
                 } else {
+                    // Light squares
                     System.out.print(SET_BG_COLOR_LIGHT_GREY);
                 }
                 ChessPiece piece = board.getPiece(new ChessPosition(row, col));
@@ -86,6 +88,66 @@ public class BoardDrawer {
                 case ROOK -> BLACK_ROOK;
                 case PAWN -> BLACK_PAWN;
             });
+        }
+    }
+
+    public void drawHighlightBoard(ChessBoard board, boolean whitePerspective, ChessPosition selectedPosition, java.util.Collection<chess.ChessMove> validMoves) {
+        System.out.println();
+        drawHeaders(whitePerspective);
+        drawCheckerboardWithHighlights(board, whitePerspective, selectedPosition, validMoves);
+        drawHeaders(whitePerspective);
+        System.out.print(RESET_BG_COLOR);
+        System.out.print(RESET_TEXT_COLOR);
+        System.out.println();
+    }
+
+    private void drawCheckerboardWithHighlights(ChessBoard board, boolean whitePerspective, ChessPosition selectedPosition, java.util.Collection<chess.ChessMove> validMoves) {
+        int startRow = whitePerspective ? 8 : 1;
+        int endRow = whitePerspective ? 1 : 8;
+        int rowDirection = whitePerspective ? -1 : 1;
+        int startCol = whitePerspective ? 1 : 8;
+        int endCol = whitePerspective ? 8 : 1;
+        int colDirection = whitePerspective ? 1 : -1;
+
+        for (int row = startRow; row != endRow + rowDirection; row += rowDirection) {
+            System.out.print(SET_BG_COLOR_BLACK);
+            System.out.print(SET_TEXT_COLOR_WHITE);
+            System.out.print(" " + row + " ");
+            for (int col = startCol; col != endCol + colDirection; col += colDirection) {
+                ChessPosition currentPosition = new ChessPosition(row, col);
+                boolean isHighlighted = currentPosition.equals(selectedPosition);
+
+                if (!isHighlighted && validMoves != null) {
+                    for (chess.ChessMove move : validMoves) {
+                        if (move.getEndPosition().equals(currentPosition)) {
+                            isHighlighted = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (isHighlighted) {
+                    if ((row + col) % 2 == 0) {
+                        System.out.print(SET_BG_COLOR_DARK_GREEN);
+                    } else {
+                        System.out.print(SET_BG_COLOR_GREEN);
+                    }
+                } else {
+                    if ((row + col) % 2 == 0) {
+                        System.out.print(SET_BG_COLOR_DARK_GREY);
+                    } else {
+                        System.out.print(SET_BG_COLOR_LIGHT_GREY);
+                    }
+                }
+                ChessPiece piece = board.getPiece(currentPosition);
+                printPiece(piece);
+            }
+            System.out.print(SET_BG_COLOR_BLACK);
+            System.out.print(SET_TEXT_COLOR_WHITE);
+            System.out.print(" " + row + " ");
+            System.out.print(RESET_BG_COLOR);
+            System.out.print(RESET_TEXT_COLOR);
+            System.out.println();
         }
     }
 }

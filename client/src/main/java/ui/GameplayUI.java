@@ -56,6 +56,7 @@ public class GameplayUI implements ServerMessageObserver {
             case "redraw" -> redraw();
             case "leave" -> leave();
             case "resign" -> resign();
+            case "move" -> makeMove(tokens);
             default -> "Unknown command\n";
         };
     }
@@ -82,6 +83,42 @@ public class GameplayUI implements ServerMessageObserver {
             }
         }
         return "Resignation cancelled.\n";
+    }
+
+    private String makeMove(String[] tokens) {
+        if (tokens.length < 3) {
+            return "Usage: move <start> <end> [promotion]\n";
+        }
+        try {
+            String startStr = tokens[1].toLowerCase();
+            String endStr = tokens[2].toLowerCase();
+            if (startStr.length() != 2 || endStr.length() != 2) {
+                return "Invalid position format. Use format like 'e2'.\n";
+            }
+            int startCol = startStr.charAt(0) - 'a' + 1;
+            int startRow = startStr.charAt(1) - '0';
+            int endCol = endStr.charAt(0) - 'a' + 1;
+            int endRow = endStr.charAt(1) - '0';
+            chess.ChessPosition start = new chess.ChessPosition(startRow, startCol);
+            chess.ChessPosition end = new chess.ChessPosition(endRow, endCol);
+            chess.ChessPiece.PieceType promotion = null;
+            if (tokens.length > 3) {
+                switch (tokens[3].toLowerCase()) {
+                    case "q" -> promotion = chess.ChessPiece.PieceType.QUEEN;
+                    case "r" -> promotion = chess.ChessPiece.PieceType.ROOK;
+                    case "b" -> promotion = chess.ChessPiece.PieceType.BISHOP;
+                    case "n" -> promotion = chess.ChessPiece.PieceType.KNIGHT;
+                    default -> {
+                        return "Invalid promotion piece. Use q, r, b, or n.\n";
+                    }
+                }
+            }
+            chess.ChessMove move = new chess.ChessMove(start, end, promotion);
+            ws.makeMove(authToken, gameID, move);
+            return "Move sent.\n";
+        } catch (Exception e) {
+            return "Error sending move: " + e.getMessage() + "\n";
+        }
     }
 
     private String help() {

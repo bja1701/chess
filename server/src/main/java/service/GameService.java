@@ -35,25 +35,25 @@ public class GameService {
         return new ListGamesResult(gameList);
     }
 
-    public void joinGame(JoinGameRequest joinRequest) throws DataAccessException{
+    public void joinGame(JoinGameRequest joinRequest) throws DataAccessException {
         AuthData gameToken = dataAccess.getAuthToken(joinRequest.authToken());
-        if (gameToken == null){
+        if (gameToken == null) {
             throw new DataAccessException("Error: unauthorized");
         }
         String username = gameToken.username();
         GameData game = dataAccess.getGame(joinRequest.gameID());
-        if (game == null){
+        if (game == null) {
             throw new DataAccessException("Error: bad request");
         }
         String teamColor = joinRequest.playerColor();
-        if ("WHITE".equals(teamColor)){
-            if (game.whiteUsername() != null){
+        if ("WHITE".equals(teamColor)) {
+            if (game.whiteUsername() != null && !game.whiteUsername().equals(username)) {
                 throw new DataAccessException("Error: already taken");
             }
             GameData updatedGame = new GameData(game.gameID(), username, game.blackUsername(), game.gameName(), game.game());
             dataAccess.updateGame(updatedGame);
-        } else if ("BLACK".equals(teamColor) && username != null) {
-            if (game.blackUsername() != null){
+        } else if ("BLACK".equals(teamColor)) {
+            if (game.blackUsername() != null && !game.blackUsername().equals(username)) {
                 throw new DataAccessException("Error: already taken");
             }
             GameData updatedGame = new GameData(game.gameID(), game.whiteUsername(), username, game.gameName(), game.game());

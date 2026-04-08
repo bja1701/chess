@@ -86,6 +86,7 @@ public class PostloginUI {
     private String joinGame(String... params) throws Exception {
         if (params.length == 2) {
             try {
+                listGames();
                 int index = Integer.parseInt(params[0]);
                 if (gamesList == null || index < 1 || index > gamesList.length) {
                     throw new Exception("Invalid game number. Type 'list' to see available games.");

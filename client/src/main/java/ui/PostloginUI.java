@@ -86,20 +86,13 @@ public class PostloginUI {
     private String joinGame(String... params) throws Exception {
         if (params.length == 2) {
             try {
-                listGames();
-                int index = Integer.parseInt(params[0]);
-                if (gamesList == null || index < 1 || index > gamesList.length) {
-                    throw new Exception("Invalid game number. Type 'list' to see available games.");
-                }
-                int gameID = gamesList[index - 1].gameID();
+                int gameID = getGameID(params[0]);
                 String color = params[1].toUpperCase();
                 facade.joinGame(color, gameID, authToken);
-                var board = new chess.ChessBoard();
-                board.resetBoard();
-                BoardDrawer drawer = new BoardDrawer();
-                boolean isWhite = color.equals("WHITE");
-                drawer.drawBoard(board, isWhite);
-                return String.format("Successfully joined game %d as %s.", index, color);
+                chess.ChessGame.TeamColor teamColor = color.equals("WHITE") ?
+                        chess.ChessGame.TeamColor.WHITE : chess.ChessGame.TeamColor.BLACK;
+                new GameplayUI("http://localhost:8080", authToken, gameID, teamColor).run();
+                return "";
             } catch (NumberFormatException e) {
                 throw new Exception("Game number must be an integer.");
             }
@@ -110,21 +103,22 @@ public class PostloginUI {
     private String observeGame(String... params) throws Exception {
         if (params.length == 1) {
             try {
-                int index = Integer.parseInt(params[0]);
-                if (gamesList == null || index < 1 || index > gamesList.length) {
-                    throw new Exception("Invalid game number. Type 'list' to see available games.");
-                }
-                var board = new chess.ChessBoard();
-                board.resetBoard();
-                BoardDrawer drawer = new BoardDrawer();
-                drawer.drawBoard(board, true);
-                System.out.println();
-                drawer.drawBoard(board, false);
-                return String.format("Successfully joined game %d as an observer.", index);
+                int gameID = getGameID(params[0]);
+                new GameplayUI("http://localhost:8080", authToken, gameID, chess.ChessGame.TeamColor.WHITE).run();
+                return "";
             } catch (NumberFormatException e) {
                 throw new Exception("Game number must be an integer.");
             }
         }
         throw new Exception("Expected: <NUMBER>");
+    }
+
+    private int getGameID(String indexStr) throws Exception {
+        listGames();
+        int index = Integer.parseInt(indexStr);
+        if (gamesList == null || index < 1 || index > gamesList.length) {
+            throw new Exception("Invalid game number. Type 'list' to see available games.");
+        }
+        return gamesList[index - 1].gameID();
     }
 }

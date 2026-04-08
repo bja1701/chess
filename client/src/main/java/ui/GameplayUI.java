@@ -12,7 +12,6 @@ import java.util.Scanner;
 
 public class GameplayUI implements ServerMessageObserver {
 
-    private final String serverUrl;
     private final String authToken;
     private final int gameID;
     private final ChessGame.TeamColor playerColor;
@@ -20,7 +19,6 @@ public class GameplayUI implements ServerMessageObserver {
     private ChessGame game;
 
     public GameplayUI(String serverUrl, String authToken, int gameID, ChessGame.TeamColor playerColor) {
-        this.serverUrl = serverUrl;
         this.authToken = authToken;
         this.gameID = gameID;
         this.playerColor = playerColor;
@@ -57,16 +55,44 @@ public class GameplayUI implements ServerMessageObserver {
             case "leave" -> leave();
             case "resign" -> resign();
             case "move" -> makeMove(tokens);
+            case "highlight" -> highlight(tokens);
             default -> "Unknown command\n";
         };
     }
 
     private String leave() {
         try {
-            ws.leave(authToken, gameID);
-            return "Left the game";
+            if (ws != null) {
+                ws.leave(authToken, gameID);
+                if (ws.session != null && ws.session.isOpen()) {
+                    ws.session.close();
+                }
+            }
         } catch (Exception e) {
-            return e.getMessage() + "\n";
+            // still exits if network error
+        }
+        return "Left the game";
+    }
+
+    private String highlight(String[] tokens) {
+        if (tokens.length < 2) {
+            return "Usage: highlight <position>\n";
+        }
+        try {
+            String posStr = tokens[1].toLowerCase();
+            if (posStr.length() != 2) {
+                return "Invalid position format. Use format like 'e2'.\n";
+            }
+            int col = posStr.charAt(0) - 'a' + 1;
+            int row = posStr.charAt(1) - '0';
+            chess.ChessPosition position = new chess.ChessPosition(row, col);
+            if (game != null) {
+                boolean whitePerspective = (playerColor != chess.ChessGame.TeamColor.BLACK);
+                new BoardDrawer().drawHighlightBoard(game.getBoard(), whitePerspective, position, game.validMoves(position));
+            }
+            return "";
+        } catch (Exception e) {
+            return "Error highlighting: " + e.getMessage() + "\n";
         }
     }
 

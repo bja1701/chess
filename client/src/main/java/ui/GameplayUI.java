@@ -76,28 +76,36 @@ public class GameplayUI implements ServerMessageObserver {
 
     private String highlight(String[] tokens) {
         if (tokens.length < 2) {
-            return EscapeSequences.SET_TEXT_COLOR_RED + "Error: Usage: highlight <position>\n" + EscapeSequences.RESET_TEXT_COLOR;
+            return EscapeSequences.SET_TEXT_COLOR_RED
+                    + "Error: Usage: highlight <position>\n"
+                    + EscapeSequences.RESET_TEXT_COLOR;
         }
         try {
             String posStr = tokens[1].toLowerCase();
-            // Catch bad formats here too
+            // Catch bad formats here too and paint RED
             if (!posStr.matches("[a-h][1-8]")) {
-                return EscapeSequences.SET_TEXT_COLOR_RED + "Error: Invalid format. Please use a letter followed by a number (e.g., 'e2').\n" + EscapeSequences.RESET_TEXT_COLOR;
+                return EscapeSequences.SET_TEXT_COLOR_RED
+                        + "Error: Invalid format. Please use a letter followed by a number (e.g., 'e2').\n"
+                        + EscapeSequences.RESET_TEXT_COLOR;
             }
             int col = posStr.charAt(0) - 'a' + 1;
             int row = posStr.charAt(1) - '0';
             chess.ChessPosition position = new chess.ChessPosition(row, col);
             if (game != null) {
-                // red error if they click an empty square
+                //red error if they click an empty square
                 if (game.getBoard().getPiece(position) == null) {
-                    return EscapeSequences.SET_TEXT_COLOR_RED + "Error: There is no piece at " + posStr + " to highlight.\n" + EscapeSequences.RESET_TEXT_COLOR;
+                    return EscapeSequences.SET_TEXT_COLOR_RED
+                            + "Error: There is no piece at " + posStr + " to highlight.\n"
+                            + EscapeSequences.RESET_TEXT_COLOR;
                 }
                 boolean whitePerspective = (playerColor != chess.ChessGame.TeamColor.BLACK);
                 new BoardDrawer().drawHighlightBoard(game.getBoard(), whitePerspective, position, game.validMoves(position));
             }
             return "";
         } catch (Exception e) {
-            return EscapeSequences.SET_TEXT_COLOR_RED + "Error highlighting: " + e.getMessage() + "\n" + EscapeSequences.RESET_TEXT_COLOR;
+            return EscapeSequences.SET_TEXT_COLOR_RED
+                    + "Error highlighting: " + e.getMessage() + "\n"
+                    + EscapeSequences.RESET_TEXT_COLOR;
         }
     }
 
@@ -118,14 +126,18 @@ public class GameplayUI implements ServerMessageObserver {
 
     private String makeMove(String[] tokens) {
         if (tokens.length < 3) {
-            return EscapeSequences.SET_TEXT_COLOR_RED + "Error: Usage: move <start> <end> [promotion]\n" + EscapeSequences.RESET_TEXT_COLOR;
+            return EscapeSequences.SET_TEXT_COLOR_RED
+                    + "Error: Usage: move <start> <end> [promotion]\n"
+                    + EscapeSequences.RESET_TEXT_COLOR;
         }
         try {
             String startStr = tokens[1].toLowerCase();
             String endStr = tokens[2].toLowerCase();
-            // catch reversed or invalid formats like 2e instead of e2
+            // catch reversed or invalid formats like "7e" and paint the error RED
             if (!startStr.matches("[a-h][1-8]") || !endStr.matches("[a-h][1-8]")) {
-                return EscapeSequences.SET_TEXT_COLOR_RED + "Error: Invalid format. Please use a letter followed by a number (e.g., 'e2').\n" + EscapeSequences.RESET_TEXT_COLOR;
+                return EscapeSequences.SET_TEXT_COLOR_RED
+                        + "Error: Invalid move format. Please use a letter followed by a number (e.g., 'e2 e4').\n"
+                        + EscapeSequences.RESET_TEXT_COLOR;
             }
             int startCol = startStr.charAt(0) - 'a' + 1;
             int startRow = startStr.charAt(1) - '0';
@@ -141,7 +153,9 @@ public class GameplayUI implements ServerMessageObserver {
                     case "b" -> promotion = chess.ChessPiece.PieceType.BISHOP;
                     case "n" -> promotion = chess.ChessPiece.PieceType.KNIGHT;
                     default -> {
-                        return EscapeSequences.SET_TEXT_COLOR_RED + "Error: Invalid promotion piece. Use q, r, b, or n.\n" + EscapeSequences.RESET_TEXT_COLOR;
+                        return EscapeSequences.SET_TEXT_COLOR_RED
+                                + "Error: Invalid promotion piece. Use q, r, b, or n.\n"
+                                + EscapeSequences.RESET_TEXT_COLOR;
                     }
                 }
             }
@@ -149,7 +163,9 @@ public class GameplayUI implements ServerMessageObserver {
             ws.makeMove(authToken, gameID, move);
             return "Move sent.\n";
         } catch (Exception e) {
-            return EscapeSequences.SET_TEXT_COLOR_RED + "Error sending move: " + e.getMessage() + "\n" + EscapeSequences.RESET_TEXT_COLOR;
+            return EscapeSequences.SET_TEXT_COLOR_RED
+                    + "Error sending move: " + e.getMessage() + "\n"
+                    + EscapeSequences.RESET_TEXT_COLOR;
         }
     }
 

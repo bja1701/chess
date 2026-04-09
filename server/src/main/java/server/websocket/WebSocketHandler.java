@@ -24,7 +24,9 @@ public class WebSocketHandler {
     }
 
     public void onConnect(WsConnectContext ctx) {
+
         System.out.println("WebSocket Connected: " + ctx.sessionId());
+        ctx.enableAutomaticPings();
     }
 
     public void onClose(WsCloseContext ctx) {
@@ -67,7 +69,14 @@ public class WebSocketHandler {
             connections.add(gameID, authToken, ctx);
             LoadGameMessage loadMessage = new LoadGameMessage(game.game());
             ctx.send(new Gson().toJson(loadMessage));
-            NotificationMessage notification = new NotificationMessage(auth.username() + " joined the game.");
+            String username = auth.username();
+            String role = "an observer";
+            if (username.equals(game.whiteUsername())) {
+                role = "White";
+            } else if (username.equals(game.blackUsername())) {
+                role = "Black";
+            }
+            NotificationMessage notification = new NotificationMessage(username + " joined the game as " + role + ".");
             connections.broadcast(gameID, authToken, notification);
         } catch (Exception e) {
             ctx.send(new Gson().toJson(new ErrorMessage("Error: " + e.getMessage())));
@@ -117,7 +126,17 @@ public class WebSocketHandler {
             dataAccess.updateGame(updatedGame);
             LoadGameMessage loadMessage = new LoadGameMessage(game.game());
             connections.broadcast(gameID, "", loadMessage);
-            NotificationMessage moveNotification = new NotificationMessage(username + " made a move.");
+            // Generate a descriptive move string
+            chess.ChessPosition start = move.getStartPosition();
+            chess.ChessPosition end = move.getEndPosition();
+            String startPos = String.format("%c%d", (char) ('a' + start.getColumn() - 1), start.getRow());
+            String endPos = String.format("%c%d", (char) ('a' + end.getColumn() - 1), end.getRow());
+            String moveDescription = username + " moved from " + startPos + " to " + endPos;
+            if (move.getPromotionPiece() != null) {
+                moveDescription += " and promoted to a " + move.getPromotionPiece().name().toLowerCase();
+            }
+            moveDescription += ".";
+            NotificationMessage moveNotification = new NotificationMessage(moveDescription);
             connections.broadcast(gameID, authToken, moveNotification);
             if (checkmate) {
                 //added player usernames
